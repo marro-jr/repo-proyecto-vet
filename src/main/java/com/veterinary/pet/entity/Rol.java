@@ -1,11 +1,11 @@
 package com.veterinary.pet.entity;
-    
+
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "rol")
 public class Rol {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_rol")
@@ -17,8 +17,19 @@ public class Rol {
     @Column(length = 150)
     private String descripcion;
 
+    public Rol() {
+    }
 
-    public Rol(){}
+    public Rol(String nombre, String descripcion) {
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+    }
+
+    public Rol(Long idRol, String nombre, String descripcion) {
+        this.idRol = idRol;
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+    }
 
     public Long getIdRol() {
         return idRol;
@@ -43,6 +54,4 @@ public class Rol {
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
     }
-
-
 }

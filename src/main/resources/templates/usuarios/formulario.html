@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Usuario - Veterinaria Pet</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/usuarios">🐾 Veterinaria Pet</a>
+            <div class="d-flex">
+                <a href="/usuarios" class="btn btn-outline-light btn-sm">Volver a la Lista</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container pb-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow-sm border-0 rounded-3">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 fw-bold text-secondary"
+                            th:text="${usuario.idUsuario == null ? 'Nuevo Usuario' : 'Editar Usuario'}">
+                            Formulario de Usuario
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+
+                        <div th:if="${error != null}" class="alert alert-danger py-2 small" role="alert" th:text="${error}">
+                            Error al procesar el usuario
+                        </div>
+
+                        <form th:action="@{/usuarios/guardar}" th:object="${usuario}" method="post">
+                            <input type="hidden" th:field="*{idUsuario}">
+
+                            <div class="mb-3">
+                                <label for="nombre" class="form-label fw-semibold">Nombre</label>
+                                <input type="text" class="form-control" id="nombre" th:field="*{nombre}" placeholder="Ej: Carlos" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="apellido" class="form-label fw-semibold">Apellido</label>
+                                <input type="text" class="form-control" id="apellido" th:field="*{apellido}" placeholder="Ej: Mendoza" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="correo" class="form-label fw-semibold">Correo Electrónico</label>
+                                <input type="email" class="form-control" id="correo" th:field="*{correo}" placeholder="ejemplo@vet.com" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label fw-semibold">Contraseña</label>
+                                <input type="password" class="form-control" id="password" th:field="*{password}"
+                                       th:placeholder="${usuario.idUsuario == null ? '••••••••' : 'Dejar en blanco para mantener la actual'}"
+                                       th:required="${usuario.idUsuario == null}">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="rol" class="form-label fw-semibold">Rol Asignado</label>
+                                <select class="form-select" id="rol" th:field="*{rol.idRol}" required>
+                                    <option value="" disabled selected>-- Seleccione un Rol --</option>
+                                    <option th:each="r : ${roles}" th:value="${r.idRol}" th:text="${r.nombre} + ' (' + ${r.descripcion} + ')'">
+                                        ADMIN
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="mb-4" th:if="${usuario.idUsuario != null}">
+                                <label for="estado" class="form-label fw-semibold">Estado</label>
+                                <select class="form-select" id="estado" th:field="*{estado}">
+                                    <option th:value="${T(com.veterinary.pet.entity.EstadoUsuario).ACTIVO}">ACTIVO</option>
+                                    <option th:value="${T(com.veterinary.pet.entity.EstadoUsuario).INACTIVO}">INACTIVO</option>
+                                </select>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="/usuarios" class="btn btn-secondary px-4">Cancelar</a>
+                                <button type="submit" class="btn btn-primary px-4 fw-semibold">Guardar</button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

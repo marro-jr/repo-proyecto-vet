@@ -1,42 +1,64 @@
 package com.veterinary.pet.entity;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.*;
 
-
-@Entity 
+@Entity
 @Table(name = "usuario")
 public class Usuario {
-    
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_usuario")
     private Long idUsuario;
 
-    @Column(name = "nombre" , nullable = false, length = 100)
+    @Column(name = "nombre", nullable = false, length = 100)
     private String nombre;
 
-    @Column(name = "apellido" , nullable = false, length = 100)
+    @Column(name = "apellido", nullable = false, length = 100)
     private String apellido;
 
-    @Column(name = "correo" , nullable = false, unique = true, length = 100)
+    @Column(name = "correo", nullable = false, unique = true, length = 100)
     private String correo;
 
-    @Column (name = "password" , nullable = false, length = 100)
+    @Column(name = "password", nullable = false, length = 100)
     private String password;
 
-    @Column(name = "estado" , nullable = false)
-    private Boolean estado;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado", nullable = false, length = 20)
+    private EstadoUsuario estado;
 
-    @Column(name = "fecha_creacion" , nullable = false)
-    private String fechaCreacion;
-
-    public Usuario() {
-    }
+    @Column(name = "fecha_creacion", nullable = false)
+    private LocalDate fechaCreacion;
 
     @ManyToOne
     @JoinColumn(name = "id_rol", nullable = false)
     private Rol rol;
+
+    public Usuario() {
+    }
+
+    public Usuario(Long idUsuario, String nombre, String apellido, String correo, String password, EstadoUsuario estado, LocalDate fechaCreacion, Rol rol) {
+        this.idUsuario = idUsuario;
+        this.nombre = nombre;
+        this.apellido = apellido;
+        this.correo = correo;
+        this.password = password;
+        this.estado = estado;
+        this.fechaCreacion = fechaCreacion;
+        this.rol = rol;
+    }
+
+    public Usuario(String nombre, String apellido, String correo, String password, EstadoUsuario estado, LocalDate fechaCreacion, Rol rol) {
+        this.nombre = nombre;
+        this.apellido = apellido;
+        this.correo = correo;
+        this.password = password;
+        this.estado = estado;
+        this.fechaCreacion = fechaCreacion;
+        this.rol = rol;
+    }
 
     public Long getIdUsuario() {
         return idUsuario;
@@ -78,19 +100,19 @@ public class Usuario {
         this.password = password;
     }
 
-    public Boolean getEstado() {
+    public EstadoUsuario getEstado() {
         return estado;
     }
 
-    public void setEstado(Boolean estado) {
+    public void setEstado(EstadoUsuario estado) {
         this.estado = estado;
     }
 
-    public String getFechaCreacion() {
+    public LocalDate getFechaCreacion() {
         return fechaCreacion;
     }
 
-    public void setFechaCreacion(String fechaCreacion) {
+    public void setFechaCreacion(LocalDate fechaCreacion) {
         this.fechaCreacion = fechaCreacion;
     }
 
@@ -101,7 +123,4 @@ public class Usuario {
     public void setRol(Rol rol) {
         this.rol = rol;
     }
-
-
-    
 }
