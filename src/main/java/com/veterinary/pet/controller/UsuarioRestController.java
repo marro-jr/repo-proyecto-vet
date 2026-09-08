@@ -1,16 +1,11 @@
 package com.veterinary.pet.controller;
 
-import java.util.List;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.veterinary.pet.entity.Usuario;
@@ -26,45 +21,43 @@ public class UsuarioRestController {
         this.usuarioService = usuarioService;
     }
 
-    @GetMapping
-    public ResponseEntity<List<Usuario>> listar() {
-        List<Usuario> lista = this.usuarioService.listarUsuarios();
-        return ResponseEntity.ok(lista);
+    @PostMapping("/login")
+    public ResponseEntity<String> login(
+            @RequestParam String correo,
+            @RequestParam String password) {
+
+        boolean credencialesCorrectas = this.usuarioService.validarCredenciales(correo, password);
+
+        if (!credencialesCorrectas) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Autenticación fallida. Correo o contraseña incorrectos, o usuario inactivo.");
+        }
+
+        Usuario usuario = this.usuarioService.buscarUsuarioPorCorreo(correo);
+        String nombreRol = usuario.getRol().getNombre();
+
+        return ResponseEntity.ok("Autenticación correcta. Rol: " + nombreRol);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Usuario> buscarPorId(@PathVariable Long id) {
-        Usuario usuario = this.usuarioService.buscarUsuarioPorId(id);
+    @GetMapping("/autorizacion")
+    public ResponseEntity<String> verificarAutorizacion(
+            @RequestParam String correo,
+            @RequestParam String rol) {
+
+        Usuario usuario = this.usuarioService.buscarUsuarioPorCorreo(correo);
+
         if (usuario == null) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Usuario no encontrado con el correo: " + correo);
         }
-        return ResponseEntity.ok(usuario);
-    }
 
-    @PostMapping
-    public ResponseEntity<Usuario> registrar(@RequestBody Usuario usuario) {
-        Usuario nuevoUsuario = this.usuarioService.registrarUsuario(usuario);
-        if (nuevoUsuario == null) {
-            return ResponseEntity.badRequest().build();
-        }
-        return ResponseEntity.status(HttpStatus.CREATED).body(nuevoUsuario);
-    }
+        boolean autorizado = this.usuarioService.tieneRol(correo, rol);
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Usuario> actualizar(@PathVariable Long id, @RequestBody Usuario usuario) {
-        Usuario usuarioActualizado = this.usuarioService.actualizarUsuario(id, usuario);
-        if (usuarioActualizado == null) {
-            return ResponseEntity.notFound().build();
+        if (!autorizado) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Usuario no autorizado para el rol " + rol);
         }
-        return ResponseEntity.ok(usuarioActualizado);
-    }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> desactivar(@PathVariable Long id) {
-        boolean desactivado = this.usuarioService.desactivarUsuario(id);
-        if (!desactivado) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("Usuario autorizado con rol " + rol);
     }
 }
