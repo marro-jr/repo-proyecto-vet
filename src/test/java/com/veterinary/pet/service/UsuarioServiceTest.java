@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.veterinary.pet.dto.UsuarioDto;
 import com.veterinary.pet.entity.EstadoUsuario;
 import com.veterinary.pet.entity.Rol;
 import com.veterinary.pet.entity.Usuario;
@@ -46,9 +47,8 @@ public class UsuarioServiceTest {
         );
     }
 
-    // =============================================
-    // AUTENTICACIÓN
-    // =============================================
+   
+    // Test para la autenticacion
 
     @Test
     void deberiaValidarCredencialesCorrectas() {
@@ -73,11 +73,11 @@ public class UsuarioServiceTest {
         when(usuarioRepository.findByCorreo("carlos@vet.com")).thenReturn(usuarioPrueba);
 
         boolean esValido = usuarioService.validarCredenciales("carlos@vet.com", "password123");
-        Usuario usuario = usuarioService.buscarUsuarioPorCorreo("carlos@vet.com");
+        UsuarioDto dto = usuarioService.buscarUsuarioPorCorreo("carlos@vet.com");
 
         assertTrue(esValido);
-        assertNotNull(usuario);
-        assertEquals("ADMIN", usuario.getRol().getNombre());
+        assertNotNull(dto);
+        assertEquals("ADMIN", dto.getNombreRol());
     }
 
     @Test
@@ -89,9 +89,7 @@ public class UsuarioServiceTest {
         assertFalse(esValido);
     }
 
-    // =============================================
-    // AUTORIZACIÓN
-    // =============================================
+    // test para la autorizacion
 
     @Test
     void deberiaTenerRolCorrecto() {
