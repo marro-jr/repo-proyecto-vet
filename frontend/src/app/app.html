@@ -149,7 +149,7 @@
 
   <main class="container my-5 flex-grow-1">
     <div class="dashboard-card">
-      <div class="d-flex align-items-center gap-3 mb-3">
+      <div class="d-flex align-items-center gap-3">
         <div class="p-3 bg-light rounded-circle fs-3">
           <i class="bi bi-person-circle text-dark"></i>
         </div>
@@ -160,14 +160,6 @@
             Permisos asignados: <strong [ngClass]="rol === 'ADMIN' ? 'text-danger' : 'text-success'">{{ rol }}</strong>
           </p>
         </div>
-      </div>
-      <hr class="my-4 text-muted" />
-      <div class="p-4 bg-light rounded-3 border text-center text-secondary">
-        <i class="bi bi-code-slash fs-2 d-block mb-2 text-dark"></i>
-        <h5 class="fw-semibold text-dark mb-1">Módulo listo para integración</h5>
-        <p class="small text-muted mb-0">
-          La autenticación con Spring Security y JWT está activa. Aquí se renderizarán los componentes y vistas CRUD.
-        </p>
       </div>
     </div>
   </main>
