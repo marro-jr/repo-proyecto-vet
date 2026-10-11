@@ -122,38 +122,55 @@
   box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
 }
 
-.quick-btn {
-  border-radius: 10px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  padding: 0.55rem 0.75rem;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  color: #334155;
-  transition: all 0.2s ease;
-}
-
-.quick-btn:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-}
-
-.quick-btn.active-admin {
-  background: #fef2f2;
-  border-color: #fecaca;
-  color: #991b1b;
-}
-
-.quick-btn.active-user {
-  background: #f0fdf4;
-  border-color: #bbf7d0;
-  color: #166534;
-}
-
 .feature-pill {
   background: rgba(255, 255, 255, 0.18);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 16px;
   padding: 1rem 1.25rem;
+}
+
+.bg-navbar-black {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+.bg-navbar-black .navbar-brand,
+.bg-navbar-black .navbar-text,
+.bg-navbar-black span {
+  color: #ffffff !important;
+}
+
+.navbar-user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.role-badge-admin {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+}
+
+.role-badge-user {
+  background-color: #16a34a !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+}
+
+.dashboard-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 2.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
