@@ -1,7 +1,7 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
+import { AuthService } from './auth.service';
 
 @Component({
   selector: 'app-root',
@@ -10,8 +10,8 @@ import { HttpClient } from '@angular/common/http';
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
-export class App implements OnInit {
-  private http = inject(HttpClient);
+export class App {
+  authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
 
   correo = '';
@@ -20,20 +20,17 @@ export class App implements OnInit {
 
   cargando = false;
   errorMensaje = '';
-  token = '';
-  rol = '';
-  usuarioLogueado = '';
 
-  ngOnInit() {
-    const tokenGuardado = localStorage.getItem('token');
-    const rolGuardado = localStorage.getItem('rol');
-    const correoGuardado = localStorage.getItem('usuarioLogueado');
-    if (tokenGuardado) {
-      this.token = tokenGuardado;
-      this.rol = rolGuardado || 'USER';
-      this.usuarioLogueado = correoGuardado || '';
-      this.cdr.detectChanges();
-    }
+  get token(): string | null {
+    return this.authService.obtenerToken();
+  }
+
+  get rol(): string | null {
+    return this.authService.obtenerRol();
+  }
+
+  get usuarioLogueado(): string | null {
+    return this.authService.obtenerCorreo();
   }
 
   alternarMostrarPassword() {
@@ -52,20 +49,9 @@ export class App implements OnInit {
     this.errorMensaje = '';
     this.cdr.detectChanges();
 
-    const payload = {
-      correo: this.correo.trim(),
-      password: this.password
-    };
-
-    this.http.post<any>('http://localhost:8080/auth/login', payload).subscribe({
-      next: (res) => {
+    this.authService.login(this.correo.trim(), this.password).subscribe({
+      next: () => {
         this.cargando = false;
-        this.token = res.token;
-        this.rol = res.rol || (this.correo.toLowerCase().includes('admin') ? 'ADMIN' : 'USER');
-        this.usuarioLogueado = res.correo || this.correo.trim();
-        localStorage.setItem('token', this.token);
-        localStorage.setItem('rol', this.rol);
-        localStorage.setItem('usuarioLogueado', this.usuarioLogueado);
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -83,15 +69,10 @@ export class App implements OnInit {
   }
 
   cerrarSesion() {
-    this.token = '';
-    this.rol = '';
-    this.usuarioLogueado = '';
+    this.authService.logout();
     this.correo = '';
     this.password = '';
     this.errorMensaje = '';
-    localStorage.removeItem('token');
-    localStorage.removeItem('rol');
-    localStorage.removeItem('usuarioLogueado');
     this.cdr.detectChanges();
   }
 }
