@@ -1,0 +1,176 @@
+:host {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  color: #1e293b;
+  display: block;
+}
+
+.login-wrapper {
+  min-height: 100vh;
+  background-color: #f0fdf4;
+}
+
+.login-card-container {
+  min-height: 100vh;
+  display: flex;
+}
+
+.form-column {
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3rem 4rem;
+}
+
+@media (max-width: 991.98px) {
+  .form-column {
+    padding: 2.5rem 1.75rem;
+  }
+}
+
+.hero-column {
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.88) 0%, rgba(14, 116, 144, 0.82) 100%),
+              url('https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 4rem 3.5rem;
+  color: #ffffff;
+  position: relative;
+}
+
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.9rem;
+  background: #ecfdf5;
+  color: #065f46;
+  border-radius: 9999px;
+  font-size: 0.825rem;
+  font-weight: 600;
+}
+
+.input-group-custom {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.input-icon-left {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.input-with-icon {
+  padding-left: 2.75rem !important;
+  padding-right: 2.75rem !important;
+  height: 48px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px !important;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.input-with-icon:focus {
+  border-color: #0d9488;
+  box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.12);
+}
+
+.btn-toggle-eye {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  z-index: 6;
+  padding: 0.35rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-toggle-eye:hover {
+  color: #0d9488;
+}
+
+.btn-primary-custom {
+  background-color: #0d9488;
+  border-color: #0d9488;
+  color: #ffffff;
+  height: 48px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.btn-primary-custom:hover:not(:disabled) {
+  background-color: #0f766e;
+  border-color: #0f766e;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+}
+
+.feature-pill {
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+}
+
+.bg-navbar-black {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+.bg-navbar-black .navbar-brand,
+.bg-navbar-black .navbar-text,
+.bg-navbar-black span {
+  color: #ffffff !important;
+}
+
+.navbar-user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.role-badge-admin {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+}
+
+.role-badge-user {
+  background-color: #16a34a !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+}
+
+.dashboard-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 2.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}

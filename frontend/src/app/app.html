@@ -1,0 +1,171 @@
+<div *ngIf="!token" class="login-wrapper">
+  <div class="container-fluid p-0">
+    <div class="row g-0 login-card-container">
+
+      <div class="col-lg-6 form-column">
+        <div class="mx-auto w-100" style="max-width: 440px;">
+
+          <div class="mb-4">
+            <span class="brand-badge mb-3">
+              <i class="bi bi-heart-pulse-fill text-teal"></i>
+              Portal Clínico Veterinario
+            </span>
+            <h2 class="fw-bold text-dark mt-2 mb-1">Bienvenido a PetaPet</h2>
+            <p class="text-secondary small">Ingresa tus credenciales para acceder a la plataforma clínica</p>
+          </div>
+
+          <div *ngIf="errorMensaje" class="alert alert-danger py-2 px-3 small rounded-3 d-flex align-items-center gap-2 mb-3" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <div>{{ errorMensaje }}</div>
+          </div>
+
+          <form (submit)="$event.preventDefault(); iniciarSesion()" (ngSubmit)="$event.preventDefault(); iniciarSesion()" autocomplete="off">
+            <div class="mb-3">
+              <label for="correo" class="form-label fw-semibold small text-secondary">Correo Institucional</label>
+              <div class="input-group-custom">
+                <i class="bi bi-envelope input-icon-left"></i>
+                <input
+                  type="email"
+                  class="form-control input-with-icon"
+                  id="correo"
+                  name="correo"
+                  [(ngModel)]="correo"
+                  placeholder="ejemplo@petapet.test"
+                  autocomplete="off"
+                  (keydown.enter)="$event.preventDefault(); iniciarSesion()"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label for="password" class="form-label fw-semibold small text-secondary">Contraseña</label>
+              <div class="input-group-custom">
+                <i class="bi bi-key input-icon-left"></i>
+                <input
+                  [type]="mostrarPassword ? 'text' : 'password'"
+                  class="form-control input-with-icon"
+                  id="password"
+                  name="password"
+                  [(ngModel)]="password"
+                  placeholder="Ingresa tu contraseña"
+                  autocomplete="new-password"
+                  (keydown.enter)="$event.preventDefault(); iniciarSesion()"
+                  required
+                />
+                <button
+                  type="button"
+                  class="btn-toggle-eye"
+                  (click)="alternarMostrarPassword()"
+                  [attr.aria-label]="mostrarPassword ? 'Ocultar contraseña' : 'Ver contraseña'"
+                >
+                  <i class="bi" [ngClass]="mostrarPassword ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              (click)="iniciarSesion()"
+              class="btn btn-primary-custom w-100 d-flex align-items-center justify-content-center gap-2"
+              [disabled]="cargando"
+            >
+              <span *ngIf="cargando" class="spinner-border spinner-border-sm" role="status"></span>
+              <span>{{ cargando ? 'Iniciando sesión...' : 'Iniciar Sesión' }}</span>
+              <i *ngIf="!cargando" class="bi bi-arrow-right"></i>
+            </button>
+          </form>
+
+        </div>
+      </div>
+
+      <div class="col-lg-6 hero-column d-none d-lg-flex">
+        <div class="d-flex align-items-center gap-2">
+          <span class="fs-4">🐾</span>
+          <span class="fw-bold fs-5 tracking-wide">PetaPet</span>
+        </div>
+
+        <div class="my-auto py-5" style="max-width: 480px;">
+          <h1 class="display-6 fw-bold mb-3 text-white">
+            Cuidamos con amor a quienes alegran tu vida.
+          </h1>
+          <p class="text-white-50 lead fs-6 mb-4">
+            Gestión clínica, control de citas veterinarias y administración de usuarios con la más alta seguridad y calidez humana.
+          </p>
+
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="feature-pill">
+                <div class="d-flex align-items-center gap-2 text-warning mb-1">
+                  <i class="bi bi-star-fill"></i>
+                  <span class="fw-bold small text-white">Atención 24/7</span>
+                </div>
+                <small class="text-white-50">Cuidado médico continuo</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="feature-pill">
+                <div class="d-flex align-items-center gap-2 text-warning mb-1">
+                  <i class="bi bi-patch-check-fill"></i>
+                  <span class="fw-bold small text-white">100% Certificado</span>
+                </div>
+                <small class="text-white-50">Especialistas clínicos</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-white-50 small">
+          &copy; 2026 PetaPet &bull; Todos los derechos reservados.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div *ngIf="token" class="min-vh-100 bg-light d-flex flex-column">
+
+  <nav class="navbar navbar-expand-lg bg-navbar-black px-4 py-3 shadow-sm">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold d-flex align-items-center gap-2 text-white" href="javascript:void(0)">
+        <span class="fs-4">🐾</span>
+        <span class="fs-5 tracking-wide">PetaPet</span>
+      </a>
+
+      <div class="d-flex align-items-center gap-3 ms-auto navbar-user-info">
+        <span class="text-white small fw-medium">{{ usuarioLogueado }}</span>
+        <span [ngClass]="rol === 'ADMIN' ? 'role-badge-admin' : 'role-badge-user'">
+          ROL: {{ rol }}
+        </span>
+
+        <button type="button" class="btn btn-outline-light btn-sm ms-2" (click)="cerrarSesion()">
+          <i class="bi bi-box-arrow-right me-1"></i>
+          Cerrar Sesión
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container my-5 flex-grow-1">
+    <div class="dashboard-card">
+      <div class="d-flex align-items-center gap-3">
+        <div class="p-3 bg-light rounded-circle fs-3">
+          <i class="bi bi-person-circle text-dark"></i>
+        </div>
+        <div>
+          <h3 class="fw-bold mb-1 text-dark">Panel Principal</h3>
+          <p class="text-secondary mb-0 small">
+            Sesión activa como: <strong class="text-dark">{{ usuarioLogueado }}</strong> &bull;
+            Permisos asignados: <strong [ngClass]="rol === 'ADMIN' ? 'text-danger' : 'text-success'">{{ rol }}</strong>
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="bg-white border-top py-3 text-center text-muted small mt-auto">
+    PetaPet &bull; Sistema Clínico Veterinario
+  </footer>
+
+</div>
