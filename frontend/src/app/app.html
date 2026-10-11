@@ -19,7 +19,7 @@
             <div>{{ errorMensaje }}</div>
           </div>
 
-          <form (ngSubmit)="iniciarSesion()" autocomplete="off">
+          <form (submit)="$event.preventDefault(); iniciarSesion()" (ngSubmit)="$event.preventDefault(); iniciarSesion()" autocomplete="off">
             <div class="mb-3">
               <label for="correo" class="form-label fw-semibold small text-secondary">Correo Institucional</label>
               <div class="input-group-custom">
@@ -32,6 +32,7 @@
                   [(ngModel)]="correo"
                   placeholder="ejemplo@petapet.test"
                   autocomplete="off"
+                  (keydown.enter)="$event.preventDefault(); iniciarSesion()"
                   required
                 />
               </div>
@@ -49,6 +50,7 @@
                   [(ngModel)]="password"
                   placeholder="Ingresa tu contraseña"
                   autocomplete="new-password"
+                  (keydown.enter)="$event.preventDefault(); iniciarSesion()"
                   required
                 />
                 <button
@@ -63,7 +65,8 @@
             </div>
 
             <button
-              type="submit"
+              type="button"
+              (click)="iniciarSesion()"
               class="btn btn-primary-custom w-100 d-flex align-items-center justify-content-center gap-2"
               [disabled]="cargando"
             >
