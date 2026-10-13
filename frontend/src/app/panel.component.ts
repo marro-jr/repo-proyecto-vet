@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
 import { UsuarioService, UsuarioDTO, RolDTO } from './usuario.service';
 
@@ -59,6 +60,9 @@ import { UsuarioService, UsuarioDTO, RolDTO } from './usuario.service';
             <i class="bi bi-shield-lock me-1"></i>
             La administración de cuentas y acceso a la sección de usuarios es exclusiva para Administradores (ADMIN).
           </div>
+          <a *ngIf="rol === 'ADMIN'" class="btn btn-primary mt-4" routerLink="/usuarios">
+            Gestionar usuarios
+          </a>
         </div>
 
         <div *ngIf="rol === 'ADMIN'">

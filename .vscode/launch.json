@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "PetApplication (dev)",
+      "request": "launch",
+      "mainClass": "com.veterinary.pet.PetApplication",
+      "cwd": "${workspaceFolder}/backend",
+      "env": {
+        "SPRING_PROFILES_ACTIVE": "dev",
+        "DB_USERNAME": "root",
+        "DB_PASSWORD": "${input:mysqlPassword}"
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "mysqlPassword",
+      "type": "promptString",
+      "description": "Contraseña de MySQL para root",
+      "password": true
+    }
+  ]
+}
