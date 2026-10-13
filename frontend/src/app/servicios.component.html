@@ -1,0 +1,60 @@
+<div style="max-width: 800px; margin: 20px auto; padding: 20px; font-family: sans-serif;">
+  <h2>Gestión de Servicios</h2>
+
+  <!-- Formulario para Crear / Editar -->
+  <div style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; margin-bottom: 20px; background-color: #f9f9f9;">
+    <h4 style="margin-top: 0;">{{ editando ? 'Editar Servicio' : 'Nuevo Servicio' }}</h4>
+    <form (ngSubmit)="guardarServicio()">
+      <div style="margin-bottom: 10px;">
+        <label style="display: block; font-weight: bold;">Nombre:</label>
+        <input type="text" name="nombre" [(ngModel)]="servicioActual.nombre" required style="width: 100%; padding: 8px;">
+      </div>
+      <div style="margin-bottom: 10px;">
+        <label style="display: block; font-weight: bold;">Descripción:</label>
+        <input type="text" name="descripcion" [(ngModel)]="servicioActual.descripcion" required style="width: 100%; padding: 8px;">
+      </div>
+      <div style="margin-bottom: 10px;">
+        <label style="display: block; font-weight: bold;">Precio (S/):</label>
+        <input type="number" name="precio" [(ngModel)]="servicioActual.precio" required style="width: 100%; padding: 8px;">
+      </div>
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; font-weight: bold;">Duración (minutos):</label>
+        <input type="number" name="duracion" [(ngModel)]="servicioActual.duracion" required style="width: 100%; padding: 8px;">
+      </div>
+      
+      <button type="submit" style="padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+        {{ editando ? 'Actualizar Servicio' : 'Guardar Servicio' }}
+      </button>
+      <button type="button" *ngIf="editando" (click)="resetForm()" style="margin-left: 10px; padding: 10px 15px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+        Cancelar
+      </button>
+    </form>
+  </div>
+
+  <!-- Tabla de Servicios -->
+  <table style="width: 100%; border-collapse: collapse; text-align: left;">
+    <thead style="background-color: #f2f2f2;">
+      <tr>
+        <th style="padding: 10px; border: 1px solid #ddd;">Nº</th> <!-- Cambiado de ID a Nº -->
+        <th style="padding: 10px; border: 1px solid #ddd;">Nombre</th>
+        <th style="padding: 10px; border: 1px solid #ddd;">Descripción</th>
+        <th style="padding: 10px; border: 1px solid #ddd;">Precio</th>
+        <th style="padding: 10px; border: 1px solid #ddd;">Duración</th>
+        <th style="padding: 10px; border: 1px solid #ddd;">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let servicio of servicios; let i = index">
+        <td style="padding: 10px; border: 1px solid #ddd;">{{ i + 1 }}</td> <!-- Muestra 1, 2, 3... -->
+        <td style="padding: 10px; border: 1px solid #ddd;">{{ servicio.nombre }}</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">{{ servicio.descripcion }}</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">S/ {{ servicio.precio }}</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">{{ servicio.duracion }} min</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">
+          <button (click)="editarServicio(servicio)" style="background-color: #ffc107; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; margin-right: 5px;">Editar</button>
+          <button (click)="eliminarServicio(servicio.idServicio)" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Eliminar</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
