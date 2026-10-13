@@ -2,16 +2,14 @@ package com.veterinary.pet.service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
-import com.veterinary.pet.dto.RolResponse;
-import com.veterinary.pet.dto.UsuarioRequest;
-import com.veterinary.pet.dto.UsuarioResponse;
+import com.veterinary.pet.dto.RolResponseDTO;
+import com.veterinary.pet.dto.UsuarioRequestDTO;
+import com.veterinary.pet.dto.UsuarioResponseDTO;
 import com.veterinary.pet.entity.EstadoUsuario;
 import com.veterinary.pet.entity.Rol;
 import com.veterinary.pet.entity.Usuario;
@@ -19,121 +17,139 @@ import com.veterinary.pet.repository.RolRepository;
 import com.veterinary.pet.repository.UsuarioRepository;
 
 @Service
-@Transactional(readOnly = true)
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UsuarioService(
-            UsuarioRepository usuarioRepository,
-            RolRepository rolRepository,
-            PasswordEncoder passwordEncoder) {
+    public UsuarioService(UsuarioRepository usuarioRepository,
+                          RolRepository rolRepository,
+                          PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
-    public List<UsuarioResponse> listar() {
+    public List<UsuarioResponseDTO> listarUsuarios() {
         return usuarioRepository.listarConRol().stream()
-                .map(this::aRespuesta)
+                .map(this::mapearADTO)
                 .toList();
     }
 
-    public List<RolResponse> listarRoles() {
-        return rolRepository.findAll().stream()
-                .map(rol -> new RolResponse(rol.getIdRol(), rol.getNombre()))
-                .toList();
-    }
-
-    @Transactional
-    public UsuarioResponse registrar(UsuarioRequest request) {
-        validarDatos(request, true);
-
-        if (usuarioRepository.findByCorreo(request.correo().trim()).isPresent()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un usuario con ese correo");
-        }
-
-        Rol rol = obtenerRol(request.idRol());
-        Usuario usuario = new Usuario(
-                request.nombre().trim(),
-                request.apellido().trim(),
-                request.correo().trim(),
-                passwordEncoder.encode(request.password()),
-                request.estado() == null ? EstadoUsuario.ACTIVO : request.estado(),
-                LocalDate.now(),
-                rol);
-
-        return aRespuesta(usuarioRepository.save(usuario));
-    }
-
-    @Transactional
-    public UsuarioResponse actualizar(Long id, UsuarioRequest request) {
-        validarDatos(request, false);
-        if (request.idRol() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El idRol es obligatorio");
-        }
-
+    public UsuarioResponseDTO obtenerPorId(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado con ID: " + id));
+        return mapearADTO(usuario);
+    }
 
-        usuarioRepository.findByCorreo(request.correo().trim()).ifPresent(existente -> {
-            if (!existente.getIdUsuario().equals(id)) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un usuario con ese correo");
+    public UsuarioResponseDTO registrarUsuario(UsuarioRequestDTO request) {
+        validarCamposObligatorios(request, true);
+
+        String correoLimpio = request.getCorreo().trim();
+        if (usuarioRepository.findByCorreo(correoLimpio).isPresent()) {
+            throw new IllegalArgumentException("El correo ya se encuentra registrado");
+        }
+
+        Rol rol = rolRepository.findById(request.getIdRol())
+                .orElseThrow(() -> new IllegalArgumentException("El rol seleccionado no existe"));
+
+        EstadoUsuario estado = request.getEstado() != null ? request.getEstado() : EstadoUsuario.ACTIVO;
+
+        String passwordEncriptada = passwordEncoder.encode(request.getPassword().trim());
+
+        Usuario nuevoUsuario = new Usuario(
+                request.getNombre().trim(),
+                request.getApellido().trim(),
+                correoLimpio,
+                passwordEncriptada,
+                estado,
+                LocalDate.now(),
+                rol
+        );
+
+        Usuario usuarioGuardado = usuarioRepository.save(nuevoUsuario);
+        return mapearADTO(usuarioGuardado);
+    }
+
+    public UsuarioResponseDTO actualizarUsuario(Long id, UsuarioRequestDTO request) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado con ID: " + id));
+
+        validarCamposObligatorios(request, false);
+
+        String nuevoCorreo = request.getCorreo().trim();
+        if (!usuario.getCorreo().equalsIgnoreCase(nuevoCorreo)) {
+            Optional<Usuario> existente = usuarioRepository.findByCorreo(nuevoCorreo);
+            if (existente.isPresent() && !existente.get().getIdUsuario().equals(id)) {
+                throw new IllegalArgumentException("El correo ya está en uso por otro usuario");
             }
-        });
-
-        usuario.setNombre(request.nombre().trim());
-        usuario.setApellido(request.apellido().trim());
-        usuario.setCorreo(request.correo().trim());
-        usuario.setEstado(request.estado() == null ? usuario.getEstado() : request.estado());
-        usuario.setRol(obtenerRol(request.idRol()));
-        if (request.password() != null && !request.password().isBlank()) {
-            usuario.setPassword(passwordEncoder.encode(request.password()));
         }
 
-        return aRespuesta(usuarioRepository.save(usuario));
+        usuario.setNombre(request.getNombre().trim());
+        usuario.setApellido(request.getApellido().trim());
+        usuario.setCorreo(nuevoCorreo);
+
+        if (request.getIdRol() != null) {
+            Rol rol = rolRepository.findById(request.getIdRol())
+                    .orElseThrow(() -> new IllegalArgumentException("El rol seleccionado no existe"));
+            usuario.setRol(rol);
+        }
+
+        if (request.getEstado() != null) {
+            usuario.setEstado(request.getEstado());
+        }
+
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            usuario.setPassword(passwordEncoder.encode(request.getPassword().trim()));
+        }
+
+        Usuario usuarioActualizado = usuarioRepository.save(usuario);
+        return mapearADTO(usuarioActualizado);
     }
 
-    @Transactional
-    public void eliminar(Long id) {
-        if (!usuarioRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
-        }
-        usuarioRepository.deleteById(id);
+    public void eliminarUsuario(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado con ID: " + id));
+
+        usuarioRepository.delete(usuario);
     }
 
-    private void validarDatos(UsuarioRequest request, boolean requierePassword) {
-        if (request == null
-                || request.nombre() == null || request.nombre().isBlank()
-                || request.apellido() == null || request.apellido().isBlank()
-                || request.correo() == null || request.correo().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Nombre, apellido y correo son obligatorios");
+    public List<RolResponseDTO> listarRoles() {
+        return rolRepository.findAll().stream()
+                .map(r -> new RolResponseDTO(r.getIdRol(), r.getNombre(), r.getDescripcion()))
+                .toList();
+    }
+
+    private void validarCamposObligatorios(UsuarioRequestDTO request, boolean validarPassword) {
+        if (request.getNombre() == null || request.getNombre().isBlank()) {
+            throw new IllegalArgumentException("El nombre es obligatorio");
         }
-        if (requierePassword && (request.password() == null || request.password().isBlank())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La contraseña es obligatoria");
+        if (request.getApellido() == null || request.getApellido().isBlank()) {
+            throw new IllegalArgumentException("El apellido es obligatorio");
         }
-        if (requierePassword && request.idRol() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El idRol es obligatorio");
+        if (request.getCorreo() == null || request.getCorreo().isBlank()) {
+            throw new IllegalArgumentException("El correo es obligatorio");
+        }
+        if (request.getIdRol() == null) {
+            throw new IllegalArgumentException("El rol es obligatorio");
+        }
+        if (validarPassword && (request.getPassword() == null || request.getPassword().isBlank())) {
+            throw new IllegalArgumentException("La contraseña es obligatoria");
         }
     }
 
-    private Rol obtenerRol(Long idRol) {
-        return rolRepository.findById(idRol)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "El rol indicado no existe"));
-    }
-
-    private UsuarioResponse aRespuesta(Usuario usuario) {
-        return new UsuarioResponse(
-                usuario.getIdUsuario(),
-                usuario.getNombre(),
-                usuario.getApellido(),
-                usuario.getCorreo(),
-                usuario.getEstado(),
-                usuario.getFechaCreacion(),
-                usuario.getRol().getIdRol(),
-                usuario.getRol().getNombre());
+    private UsuarioResponseDTO mapearADTO(Usuario u) {
+        return new UsuarioResponseDTO(
+                u.getIdUsuario(),
+                u.getNombre(),
+                u.getApellido(),
+                u.getCorreo(),
+                u.getEstado(),
+                u.getFechaCreacion(),
+                u.getRol() != null ? u.getRol().getIdRol() : null,
+                u.getRol() != null ? u.getRol().getNombre() : null,
+                u.getRol() != null ? u.getRol().getDescripcion() : null
+        );
     }
 }

@@ -1,5 +1,6 @@
 package com.veterinary.pet.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.List;
 
@@ -9,12 +10,14 @@ import org.springframework.stereotype.Repository;
 
 import com.veterinary.pet.entity.Usuario;
 
-
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     Optional<Usuario> findByCorreo(String correo);
 
-    @Query("SELECT u FROM Usuario u JOIN FETCH u.rol ORDER BY u.idUsuario")
+    boolean existsByCorreo(String correo);
+
+    @Query("SELECT u FROM Usuario u JOIN FETCH u.rol")
     List<Usuario> listarConRol();
+
 }

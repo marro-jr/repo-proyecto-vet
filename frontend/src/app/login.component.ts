@@ -98,7 +98,6 @@ import { AuthService } from './auth.service';
               <p class="text-white-50 lead fs-6 mb-4">
                 Gestión clínica, control de citas veterinarias y administración de usuarios con la más alta seguridad y calidez humana.
               </p>
-
             </div>
 
             <div class="text-white-50 small">
