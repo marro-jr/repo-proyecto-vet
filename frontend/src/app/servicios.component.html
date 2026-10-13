@@ -1,77 +1,168 @@
-<div style="max-width: 900px; margin: 20px auto; padding: 20px; font-family: sans-serif;">
-  <h2>Gestión de Servicios</h2>
+<div class="min-vh-100 bg-light d-flex flex-column">
 
-  <!-- Mensajes de estado -->
-  <div *ngIf="cargando" style="padding: 10px; background-color: #e9ecef; margin-bottom: 15px; border-radius: 4px;">
-    Cargando servicios del servidor...
-  </div>
-  <div *ngIf="errorMensaje" style="padding: 10px; background-color: #f8d7da; color: #721c24; margin-bottom: 15px; border-radius: 4px;">
-    {{ errorMensaje }}
-  </div>
+  <nav class="navbar navbar-expand-lg bg-navbar-black px-4 py-3 shadow-sm" style="background-color: #212529;">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold d-flex align-items-center gap-2 text-white" routerLink="/panel" style="cursor: pointer; text-decoration: none;">
+        <span class="fs-5 tracking-wide">PetaPet</span>
+      </a>
 
-  <!-- Formulario para Crear / Editar (SOLO ADMIN) -->
-  <div *ngIf="isAdmin" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; margin-bottom: 20px; background-color: #f9f9f9;">
-    <h4 style="margin-top: 0; color: #333;">{{ editando ? 'Editar Servicio' : 'Nuevo Servicio' }}</h4>
-    <form (ngSubmit)="guardarServicio()">
-      <div style="display: flex; gap: 15px; margin-bottom: 15px;">
-        <div style="flex: 1;">
-          <label style="display: block; font-weight: bold; margin-bottom: 5px;">Nombre:</label>
-          <input type="text" name="nombre" [(ngModel)]="servicioActual.nombre" required style="width: 100%; padding: 8px; box-sizing: border-box;">
+      <div class="d-flex align-items-center ms-auto">
+        <a class="btn btn-outline-light btn-sm" routerLink="/panel">
+          <i class="bi bi-arrow-left me-1"></i> Volver al Panel
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container my-4 flex-grow-1">
+
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+      <div>
+        <h1 class="h3 fw-bold mb-1 text-dark">Gestión de Servicios</h1>
+        <p class="text-secondary mb-0">Catálogo clínico y administración de servicios veterinarios.</p>
+      </div>
+    </div>
+
+    <div *ngIf="exitoMensaje" class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+      <i class="bi bi-check-circle-fill"></i>
+      <div>{{ exitoMensaje }}</div>
+      <button type="button" class="btn-close ms-auto" (click)="exitoMensaje = ''"></button>
+    </div>
+
+    <div *ngIf="errorMensaje" class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <div>{{ errorMensaje }}</div>
+      <button type="button" class="btn-close ms-auto" (click)="errorMensaje = ''"></button>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+      <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0 text-dark">
+          <i class="bi" [ngClass]="editando ? 'bi-pencil-square text-primary' : 'bi-plus-circle-fill text-success'"></i>
+          {{ editando ? 'Modificar Servicio #' + servicioActual.idServicio : 'Registrar Nuevo Servicio' }}
+        </h5>
+        <button *ngIf="editando" type="button" class="btn btn-outline-secondary btn-sm" (click)="resetForm()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="card-body px-4 pb-4 pt-2">
+        <form (ngSubmit)="guardarServicio()">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary">Nombre del Servicio *</label>
+              <input type="text" name="nombre" class="form-control" [(ngModel)]="servicioActual.nombre" placeholder="Ej: Consulta general" required />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary">Descripción *</label>
+              <input type="text" name="descripcion" class="form-control" [(ngModel)]="servicioActual.descripcion" placeholder="Ej: Evaluación médica general" required />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary">Precio (S/) *</label>
+              <input type="number" name="precio" class="form-control" [(ngModel)]="servicioActual.precio" min="0" step="0.5" placeholder="0.00" required />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary">Duración (minutos) *</label>
+              <input type="number" name="duracion" class="form-control" [(ngModel)]="servicioActual.duracion" min="1" placeholder="Ej: 30" required />
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button *ngIf="editando" type="button" class="btn btn-outline-secondary px-3" (click)="resetForm()">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary px-4" [disabled]="guardando">
+              <span *ngIf="guardando" class="spinner-border spinner-border-sm me-1"></span>
+              {{ editando ? 'Actualizar Servicio' : 'Guardar Servicio' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4">
+      <div class="card-header bg-white py-3 border-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+          <h5 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-card-checklist text-success me-2"></i>Catálogo de Servicios Registrados
+          </h5>
         </div>
-        <div style="flex: 1;">
-          <label style="display: block; font-weight: bold; margin-bottom: 5px;">Descripción:</label>
-          <input type="text" name="descripcion" [(ngModel)]="servicioActual.descripcion" required style="width: 100%; padding: 8px; box-sizing: border-box;">
+
+        <div>
+          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="cargarServicios()" [disabled]="cargando">
+            <i class="bi bi-arrow-clockwise me-1"></i> Refrescar
+          </button>
         </div>
       </div>
-      <div style="display: flex; gap: 15px; margin-bottom: 15px;">
-        <div style="flex: 1;">
-          <label style="display: block; font-weight: bold; margin-bottom: 5px;">Precio (S/):</label>
-          <input type="number" name="precio" [(ngModel)]="servicioActual.precio" required style="width: 100%; padding: 8px; box-sizing: border-box;">
-        </div>
-        <div style="flex: 1;">
-          <label style="display: block; font-weight: bold; margin-bottom: 5px;">Duración (minutos):</label>
-          <input type="number" name="duracion" [(ngModel)]="servicioActual.duracion" required style="width: 100%; padding: 8px; box-sizing: border-box;">
-        </div>
-      </div>
-      
-      <button type="submit" style="padding: 10px 15px; background-color: #0d6efd; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
-        {{ editando ? 'Actualizar Servicio' : 'Guardar Servicio' }}
-      </button>
-      <button type="button" *ngIf="editando" (click)="resetForm()" style="margin-left: 10px; padding: 10px 15px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
-        Cancelar
-      </button>
-    </form>
-  </div>
 
-  <!-- Tabla de Servicios (Visible para todos) -->
-  <table style="width: 100%; border-collapse: collapse; text-align: left; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-    <thead style="background-color: #f8f9fa;">
-      <tr>
-        <th style="padding: 12px; border: 1px solid #dee2e6;">Nº</th>
-        <th style="padding: 12px; border: 1px solid #dee2e6;">Nombre</th>
-        <th style="padding: 12px; border: 1px solid #dee2e6;">Descripción</th>
-        <th style="padding: 12px; border: 1px solid #dee2e6;">Precio</th>
-        <th style="padding: 12px; border: 1px solid #dee2e6;">Duración</th>
-        <th *ngIf="isAdmin" style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngIf="!cargando && servicios.length === 0">
-        <td [attr.colspan]="isAdmin ? 6 : 5" style="padding: 20px; text-align: center; color: #6c757d; border: 1px solid #dee2e6;">
-          No hay servicios registrados.
-        </td>
-      </tr>
-      <tr *ngFor="let servicio of servicios; let i = index" style="background-color: #fff;">
-        <td style="padding: 12px; border: 1px solid #dee2e6;">{{ i + 1 }}</td>
-        <td style="padding: 12px; border: 1px solid #dee2e6; font-weight: 500;">{{ servicio.nombre }}</td>
-        <td style="padding: 12px; border: 1px solid #dee2e6; color: #495057;">{{ servicio.descripcion }}</td>
-        <td style="padding: 12px; border: 1px solid #dee2e6;">S/ {{ servicio.precio }}</td>
-        <td style="padding: 12px; border: 1px solid #dee2e6;">{{ servicio.duracion }} min</td>
-        <td *ngIf="isAdmin" style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">
-          <button (click)="editarServicio(servicio)" style="background-color: #ffc107; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 5px; font-weight: bold; color: #000;">Editar</button>
-          <button (click)="eliminarServicio(servicio.idServicio)" style="background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">Eliminar</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light text-secondary small">
+            <tr>
+              <th>Nº</th>
+              <th>Nombre</th>
+              <th>Descripción</th>
+              <th>Precio</th>
+              <th>Duración</th>
+              <th class="text-end pe-4">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="cargando">
+              <td colspan="6" class="text-center py-4 text-secondary">
+                <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                Cargando servicios del servidor...
+              </td>
+            </tr>
+
+            <tr *ngIf="!cargando && servicios.length === 0">
+              <td colspan="6" class="text-center py-4 text-muted">
+                No hay servicios registrados en el sistema.
+              </td>
+            </tr>
+
+            <tr *ngFor="let servicio of servicios; let i = index">
+              <td class="fw-bold text-secondary">{{ i + 1 }}</td>
+              <td class="fw-medium text-dark">{{ servicio.nombre }}</td>
+              <td class="text-secondary">{{ servicio.descripcion }}</td>
+              <td class="fw-semibold text-dark">S/ {{ servicio.precio }}</td>
+              <td>
+                <span class="badge bg-light text-dark border">{{ servicio.duracion }} min</span>
+              </td>
+              <td class="text-end pe-4">
+                <button
+                  type="button"
+                  class="btn btn-outline-primary btn-sm me-2"
+                  (click)="editarServicio(servicio)"
+                  title="Modificar servicio"
+                >
+                  <i class="bi bi-pencil-fill me-1"></i>Editar
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-danger btn-sm"
+                  (click)="eliminarServicio(servicio.idServicio)"
+                  title="Eliminar servicio"
+                >
+                  <i class="bi bi-trash-fill me-1"></i>Eliminar
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card-footer bg-white border-0 py-3 text-secondary small d-flex justify-content-between align-items-center">
+        <span>Total de servicios: <strong>{{ servicios.length }}</strong></span>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="bg-white border-top py-3 text-center text-muted small mt-auto">
+    PetaPet &bull; Sistema Veterinario
+  </footer>
+
 </div>

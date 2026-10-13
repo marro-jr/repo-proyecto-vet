@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -15,11 +15,9 @@ import { UsuarioService, UsuarioDTO, RolDTO } from './usuario.service';
       <nav class="navbar navbar-expand-lg bg-navbar-black px-4 py-3 shadow-sm" style="background-color: #212529;">
         <div class="container-fluid">
           <a class="navbar-brand fw-bold d-flex align-items-center gap-2 text-white" routerLink="/panel" style="cursor: pointer; text-decoration: none;">
-            <span class="fs-4">🐾</span>
             <span class="fs-5 tracking-wide">PetaPet</span>
           </a>
 
-          <!-- NUEVO: Botón de Servicios en la barra superior para todos los roles -->
           <div class="d-flex align-items-center ms-4 me-auto">
              <a routerLink="/servicios" class="btn btn-outline-light btn-sm fw-semibold">
                <i class="bi bi-card-list me-1"></i> Catálogo de Servicios
@@ -54,27 +52,16 @@ import { UsuarioService, UsuarioDTO, RolDTO } from './usuario.service';
           <button type="button" class="btn-close ms-auto" (click)="errorMensaje = ''"></button>
         </div>
 
-        <!-- VISTA PARA EL EMPLEADO / USER -->
         <div *ngIf="rol !== 'ADMIN'" class="dashboard-card text-center py-5 bg-white shadow-sm rounded-4 mt-4">
-          <div class="fs-1 text-secondary mb-3">
-            <i class="bi bi-person-badge"></i>
+          <div class="fs-1 text-primary mb-3">
+            <i class="bi bi-card-checklist"></i>
           </div>
-          <h4 class="fw-bold text-dark">Portal de Recepción PetaPet</h4>
-          <p class="text-secondary max-w-md mx-auto mb-2">
-            Sesión iniciada como <strong>{{ usuarioLogueado }}</strong> (Rol: <strong>USER</strong>).
-          </p>
-          <div class="alert alert-secondary d-inline-block small text-muted px-4 py-2 mt-2">
-            <i class="bi bi-shield-lock me-1"></i>
-            La administración de cuentas es exclusiva para Administradores (ADMIN).
-          </div>
-          <br>
-          <!-- NUEVO: Botón gigante para ir a los servicios -->
-          <a class="btn btn-primary mt-4 px-4 py-2" routerLink="/servicios">
+          <h4 class="fw-bold text-dark mb-4">Catálogo de Servicios</h4>
+          <a class="btn btn-primary px-4 py-2" routerLink="/servicios">
             <i class="bi bi-clipboard2-pulse me-2"></i> Ir al Catálogo de Servicios
           </a>
         </div>
 
-        <!-- VISTA PARA EL ADMIN (Gestión de Usuarios) -->
         <div *ngIf="rol === 'ADMIN'">
 
           <div *ngIf="mostrarFormulario" class="card shadow-sm border-0 rounded-4 mb-4">
@@ -153,12 +140,9 @@ import { UsuarioService, UsuarioDTO, RolDTO } from './usuario.service';
           <div class="card shadow-sm border-0 rounded-4">
             <div class="card-header bg-white py-3 border-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
               <div>
-                <h5 class="fw-bold mb-1 text-dark">
+                <h5 class="fw-bold mb-0 text-dark">
                   <i class="bi bi-people-fill text-success me-2"></i>Gestión de Usuarios Clínicos
                 </h5>
-                <p class="text-secondary small mb-0">
-                  Módulo administrativo con control de acceso por roles y contraseñas protegidas con BCrypt.
-                </p>
               </div>
 
               <div class="d-flex gap-2">
@@ -240,7 +224,6 @@ import { UsuarioService, UsuarioDTO, RolDTO } from './usuario.service';
 
             <div class="card-footer bg-white border-0 py-3 text-secondary small d-flex justify-content-between align-items-center">
               <span>Total de usuarios: <strong>{{ usuarios.length }}</strong></span>
-              <span class="text-muted">Desarrollo Web Integrado &bull; Sección 5</span>
             </div>
           </div>
 
@@ -249,7 +232,7 @@ import { UsuarioService, UsuarioDTO, RolDTO } from './usuario.service';
       </main>
 
       <footer class="bg-white border-top py-3 text-center text-muted small mt-auto">
-        PetaPet &bull; Sistema Clínico Veterinario
+        PetaPet &bull; Sistema Veterinario
       </footer>
 
     </div>
@@ -259,6 +242,7 @@ export class PanelComponent implements OnInit {
   private authService = inject(AuthService);
   private usuarioService = inject(UsuarioService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   usuarios: UsuarioDTO[] = [];
   roles: RolDTO[] = [];
@@ -300,22 +284,28 @@ export class PanelComponent implements OnInit {
         if (this.roles.length > 0 && this.formIdRol === null) {
           this.formIdRol = this.roles[0].idRol;
         }
+        this.cdr.detectChanges();
       },
-      error: () => {}
+      error: () => {
+        this.cdr.detectChanges();
+      }
     });
   }
 
   cargarUsuarios() {
     this.cargando = true;
     this.errorMensaje = '';
+    this.cdr.detectChanges();
     this.usuarioService.listarUsuarios().subscribe({
       next: (data) => {
         this.usuarios = data;
         this.cargando = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.cargando = false;
         this.errorMensaje = err.error?.error || 'No fue posible cargar el listado de usuarios.';
+        this.cdr.detectChanges();
       }
     });
   }
@@ -331,6 +321,7 @@ export class PanelComponent implements OnInit {
     this.mostrarFormulario = true;
     this.errorMensaje = '';
     this.exitoMensaje = '';
+    this.cdr.detectChanges();
   }
 
   abrirEditar(u: UsuarioDTO) {
@@ -344,27 +335,32 @@ export class PanelComponent implements OnInit {
     this.mostrarFormulario = true;
     this.errorMensaje = '';
     this.exitoMensaje = '';
+    this.cdr.detectChanges();
   }
 
   cancelarFormulario() {
     this.mostrarFormulario = false;
     this.editandoId = null;
+    this.cdr.detectChanges();
   }
 
   guardarUsuario() {
     if (!this.formNombre || !this.formApellido || !this.formCorreo || !this.formIdRol) {
       this.errorMensaje = 'Por favor completa todos los campos requeridos.';
+      this.cdr.detectChanges();
       return;
     }
 
     if (!this.editandoId && !this.formPassword) {
       this.errorMensaje = 'La contraseña es obligatoria para registrar un nuevo usuario.';
+      this.cdr.detectChanges();
       return;
     }
 
     this.guardando = true;
     this.errorMensaje = '';
     this.exitoMensaje = '';
+    this.cdr.detectChanges();
 
     const payload: UsuarioDTO = {
       nombre: this.formNombre.trim(),
@@ -382,10 +378,12 @@ export class PanelComponent implements OnInit {
           this.exitoMensaje = 'Usuario actualizado correctamente.';
           this.mostrarFormulario = false;
           this.cargarUsuarios();
+          this.cdr.detectChanges();
         },
         error: (err) => {
           this.guardando = false;
           this.errorMensaje = err.error?.error || 'No fue posible actualizar el usuario.';
+          this.cdr.detectChanges();
         }
       });
     } else {
@@ -395,10 +393,12 @@ export class PanelComponent implements OnInit {
           this.exitoMensaje = 'Usuario registrado exitosamente.';
           this.mostrarFormulario = false;
           this.cargarUsuarios();
+          this.cdr.detectChanges();
         },
         error: (err) => {
           this.guardando = false;
           this.errorMensaje = err.error?.error || 'No fue posible registrar el usuario.';
+          this.cdr.detectChanges();
         }
       });
     }
@@ -411,13 +411,16 @@ export class PanelComponent implements OnInit {
 
     this.errorMensaje = '';
     this.exitoMensaje = '';
+    this.cdr.detectChanges();
     this.usuarioService.eliminarUsuario(u.idUsuario).subscribe({
       next: () => {
         this.exitoMensaje = `Usuario #${u.idUsuario} eliminado exitosamente.`;
         this.cargarUsuarios();
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.errorMensaje = err.error?.error || 'No fue posible eliminar el usuario.';
+        this.cdr.detectChanges();
       }
     });
   }

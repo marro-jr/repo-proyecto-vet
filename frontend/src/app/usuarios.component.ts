@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Usuario, UsuarioDatos, UsuariosService, Rol } from './usuarios.service';
@@ -110,6 +110,7 @@ import { Usuario, UsuarioDatos, UsuariosService, Rol } from './usuarios.service'
 })
 export class UsuariosComponent implements OnInit {
   private usuariosService = inject(UsuariosService);
+  private cdr = inject(ChangeDetectorRef);
 
   usuarios: Usuario[] = [];
   roles: Rol[] = [];
@@ -126,22 +127,29 @@ export class UsuariosComponent implements OnInit {
       next: roles => {
         this.roles = roles;
         this.datos.idRol = roles.find(rol => rol.nombre === 'USER')?.idRol ?? roles[0]?.idRol ?? 0;
+        this.cdr.detectChanges();
       },
-      error: err => this.mostrarError(err)
+      error: err => {
+        this.mostrarError(err);
+        this.cdr.detectChanges();
+      }
     });
     this.cargarUsuarios();
   }
 
   cargarUsuarios(): void {
     this.cargando = true;
+    this.cdr.detectChanges();
     this.usuariosService.listar().subscribe({
       next: usuarios => {
         this.usuarios = usuarios;
         this.cargando = false;
+        this.cdr.detectChanges();
       },
       error: err => {
         this.cargando = false;
         this.mostrarError(err);
+        this.cdr.detectChanges();
       }
     });
   }
@@ -150,6 +158,7 @@ export class UsuariosComponent implements OnInit {
     this.error = '';
     this.mensaje = '';
     this.guardando = true;
+    this.cdr.detectChanges();
     const peticion = this.usuarioEditando
       ? this.usuariosService.actualizar(this.usuarioEditando.idUsuario, this.datos)
       : this.usuariosService.registrar(this.datos);
@@ -160,10 +169,12 @@ export class UsuariosComponent implements OnInit {
         this.guardando = false;
         this.cancelarEdicion();
         this.cargarUsuarios();
+        this.cdr.detectChanges();
       },
       error: err => {
         this.guardando = false;
         this.mostrarError(err);
+        this.cdr.detectChanges();
       }
     });
   }
@@ -180,6 +191,7 @@ export class UsuariosComponent implements OnInit {
     };
     this.mensaje = '';
     this.error = '';
+    this.cdr.detectChanges();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -187,18 +199,24 @@ export class UsuariosComponent implements OnInit {
     this.usuarioEditando = null;
     this.datos = this.datosVacios();
     this.datos.idRol = this.roles.find(rol => rol.nombre === 'USER')?.idRol ?? this.roles[0]?.idRol ?? 0;
+    this.cdr.detectChanges();
   }
 
   eliminar(usuario: Usuario): void {
     if (!window.confirm(`¿Eliminar a ${usuario.nombre} ${usuario.apellido}?`)) return;
     this.error = '';
     this.mensaje = '';
+    this.cdr.detectChanges();
     this.usuariosService.eliminar(usuario.idUsuario).subscribe({
       next: () => {
         this.mensaje = 'Usuario eliminado.';
         this.cargarUsuarios();
+        this.cdr.detectChanges();
       },
-      error: err => this.mostrarError(err)
+      error: err => {
+        this.mostrarError(err);
+        this.cdr.detectChanges();
+      }
     });
   }
 

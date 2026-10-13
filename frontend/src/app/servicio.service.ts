@@ -14,9 +14,12 @@ export class ServicioService {
 
   private getHeaders(): HttpHeaders {
     const token = localStorage.getItem('token');
-    return new HttpHeaders({
-      'Authorization': `Bearer ${token}`
-    });
+    if (token) {
+      return new HttpHeaders({
+        'Authorization': `Bearer ${token}`
+      });
+    }
+    return new HttpHeaders();
   }
 
   getServicios(): Observable<Servicio[]> {
