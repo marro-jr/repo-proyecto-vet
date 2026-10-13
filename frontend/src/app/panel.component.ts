@@ -1,28 +1,34 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
 import { UsuarioService, UsuarioDTO, RolDTO } from './usuario.service';
 
 @Component({
   selector: 'app-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <div class="min-vh-100 bg-light d-flex flex-column">
 
-      <nav class="navbar navbar-expand-lg bg-navbar-black px-4 py-3 shadow-sm">
+      <nav class="navbar navbar-expand-lg bg-navbar-black px-4 py-3 shadow-sm" style="background-color: #212529;">
         <div class="container-fluid">
-          <a class="navbar-brand fw-bold d-flex align-items-center gap-2 text-white" href="javascript:void(0)">
+          <a class="navbar-brand fw-bold d-flex align-items-center gap-2 text-white" routerLink="/panel" style="cursor: pointer; text-decoration: none;">
             <span class="fs-4">🐾</span>
             <span class="fs-5 tracking-wide">PetaPet</span>
           </a>
 
+          <!-- NUEVO: Botón de Servicios en la barra superior para todos los roles -->
+          <div class="d-flex align-items-center ms-4 me-auto">
+             <a routerLink="/servicios" class="btn btn-outline-light btn-sm fw-semibold">
+               <i class="bi bi-card-list me-1"></i> Catálogo de Servicios
+             </a>
+          </div>
+
           <div class="d-flex align-items-center gap-3 ms-auto navbar-user-info">
             <span class="text-white small fw-medium">{{ usuarioLogueado }}</span>
-            <span [ngClass]="rol === 'ADMIN' ? 'role-badge-admin' : 'role-badge-user'">
+            <span [ngClass]="rol === 'ADMIN' ? 'badge bg-danger' : 'badge bg-primary'">
               ROL: {{ rol }}
             </span>
 
@@ -48,7 +54,8 @@ import { UsuarioService, UsuarioDTO, RolDTO } from './usuario.service';
           <button type="button" class="btn-close ms-auto" (click)="errorMensaje = ''"></button>
         </div>
 
-        <div *ngIf="rol !== 'ADMIN'" class="dashboard-card text-center py-5">
+        <!-- VISTA PARA EL EMPLEADO / USER -->
+        <div *ngIf="rol !== 'ADMIN'" class="dashboard-card text-center py-5 bg-white shadow-sm rounded-4 mt-4">
           <div class="fs-1 text-secondary mb-3">
             <i class="bi bi-person-badge"></i>
           </div>
@@ -58,19 +65,22 @@ import { UsuarioService, UsuarioDTO, RolDTO } from './usuario.service';
           </p>
           <div class="alert alert-secondary d-inline-block small text-muted px-4 py-2 mt-2">
             <i class="bi bi-shield-lock me-1"></i>
-            La administración de cuentas y acceso a la sección de usuarios es exclusiva para Administradores (ADMIN).
+            La administración de cuentas es exclusiva para Administradores (ADMIN).
           </div>
-          <a *ngIf="rol === 'ADMIN'" class="btn btn-primary mt-4" routerLink="/usuarios">
-            Gestionar usuarios
+          <br>
+          <!-- NUEVO: Botón gigante para ir a los servicios -->
+          <a class="btn btn-primary mt-4 px-4 py-2" routerLink="/servicios">
+            <i class="bi bi-clipboard2-pulse me-2"></i> Ir al Catálogo de Servicios
           </a>
         </div>
 
+        <!-- VISTA PARA EL ADMIN (Gestión de Usuarios) -->
         <div *ngIf="rol === 'ADMIN'">
 
           <div *ngIf="mostrarFormulario" class="card shadow-sm border-0 rounded-4 mb-4">
             <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
               <h5 class="fw-bold mb-0 text-dark">
-                <i class="bi" [ngClass]="editandoId ? 'bi-pencil-square text-primary' : 'bi-person-plus-fill text-teal'"></i>
+                <i class="bi" [ngClass]="editandoId ? 'bi-pencil-square text-primary' : 'bi-person-plus-fill text-success'"></i>
                 {{ editandoId ? 'Modificar Usuario #' + editandoId : 'Registrar Nuevo Usuario' }}
               </h5>
               <button type="button" class="btn btn-outline-secondary btn-sm" (click)="cancelarFormulario()">
@@ -131,7 +141,7 @@ import { UsuarioService, UsuarioDTO, RolDTO } from './usuario.service';
                   <button type="button" class="btn btn-outline-secondary px-3" (click)="cancelarFormulario()">
                     Cancelar
                   </button>
-                  <button type="submit" class="btn btn-primary-custom px-4" [disabled]="guardando">
+                  <button type="submit" class="btn btn-primary px-4" [disabled]="guardando">
                     <span *ngIf="guardando" class="spinner-border spinner-border-sm me-1"></span>
                     {{ editandoId ? 'Actualizar Usuario' : 'Crear Usuario' }}
                   </button>
@@ -144,7 +154,7 @@ import { UsuarioService, UsuarioDTO, RolDTO } from './usuario.service';
             <div class="card-header bg-white py-3 border-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
               <div>
                 <h5 class="fw-bold mb-1 text-dark">
-                  <i class="bi bi-people-fill text-teal me-2"></i>Gestión de Usuarios Clínicos
+                  <i class="bi bi-people-fill text-success me-2"></i>Gestión de Usuarios Clínicos
                 </h5>
                 <p class="text-secondary small mb-0">
                   Módulo administrativo con control de acceso por roles y contraseñas protegidas con BCrypt.
@@ -156,7 +166,7 @@ import { UsuarioService, UsuarioDTO, RolDTO } from './usuario.service';
                   <i class="bi bi-arrow-clockwise me-1"></i>
                   Refrescar
                 </button>
-                <button *ngIf="!mostrarFormulario" type="button" class="btn btn-primary-custom btn-sm" (click)="abrirNuevo()">
+                <button *ngIf="!mostrarFormulario" type="button" class="btn btn-success btn-sm" (click)="abrirNuevo()">
                   <i class="bi bi-person-plus-fill me-1"></i>
                   Nuevo Usuario
                 </button>
@@ -179,7 +189,7 @@ import { UsuarioService, UsuarioDTO, RolDTO } from './usuario.service';
                 <tbody>
                   <tr *ngIf="cargando">
                     <td colspan="7" class="text-center py-4 text-secondary">
-                      <div class="spinner-border spinner-border-sm text-teal me-2"></div>
+                      <div class="spinner-border spinner-border-sm text-primary me-2"></div>
                       Cargando listado de usuarios...
                     </td>
                   </tr>
@@ -195,7 +205,7 @@ import { UsuarioService, UsuarioDTO, RolDTO } from './usuario.service';
                     <td class="fw-medium text-dark">{{ u.nombre }} {{ u.apellido }}</td>
                     <td>{{ u.correo }}</td>
                     <td>
-                      <span [ngClass]="u.rol === 'ADMIN' ? 'role-badge-admin' : 'role-badge-user'">
+                      <span [ngClass]="u.rol === 'ADMIN' ? 'badge bg-danger' : 'badge bg-primary'">
                         {{ u.rol }}
                       </span>
                     </td>
@@ -239,7 +249,7 @@ import { UsuarioService, UsuarioDTO, RolDTO } from './usuario.service';
       </main>
 
       <footer class="bg-white border-top py-3 text-center text-muted small mt-auto">
-        PetaPet &bull; Sistema Clínico Veterinario &bull; Módulo de Usuarios
+        PetaPet &bull; Sistema Clínico Veterinario
       </footer>
 
     </div>

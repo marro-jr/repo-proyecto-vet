@@ -19,17 +19,50 @@ export class ServiciosComponent implements OnInit {
     duracion: 0
   };
   editando: boolean = false;
+  isAdmin: boolean = false;
+  cargando: boolean = false;
+  errorMensaje: string = '';
 
   constructor(private servicioService: ServicioService) {}
 
   ngOnInit(): void {
+    this.verificarRol();
     this.cargarServicios();
   }
 
+  verificarRol(): void {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        console.log("Datos del token JWT:", payload); 
+
+        const rolExtraido = payload.rol || payload.role || payload.authorities || '';
+        
+        if (typeof rolExtraido === 'string') {
+          this.isAdmin = rolExtraido.includes('ADMIN');
+        } else if (Array.isArray(rolExtraido)) {
+          this.isAdmin = rolExtraido.some(r => r.includes('ADMIN'));
+        }
+      } catch (e) {
+        console.error('Error al decodificar el token', e);
+      }
+    }
+  }
+
   cargarServicios(): void {
+    this.cargando = true;
+    this.errorMensaje = '';
     this.servicioService.getServicios().subscribe({
-      next: (data) => this.servicios = data,
-      error: (err) => console.error('Error al cargar servicios', err)
+      next: (data) => {
+        this.servicios = data;
+        this.cargando = false;
+      },
+      error: (err) => {
+        console.error('Error al cargar servicios', err);
+        this.errorMensaje = 'Error al cargar los datos. Verifica que el servidor esté activo.';
+        this.cargando = false;
+      }
     });
   }
 

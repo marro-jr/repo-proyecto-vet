@@ -1,58 +1,75 @@
-<div style="max-width: 800px; margin: 20px auto; padding: 20px; font-family: sans-serif;">
+<div style="max-width: 900px; margin: 20px auto; padding: 20px; font-family: sans-serif;">
   <h2>Gestión de Servicios</h2>
 
-  <!-- Formulario para Crear / Editar -->
-  <div style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; margin-bottom: 20px; background-color: #f9f9f9;">
-    <h4 style="margin-top: 0;">{{ editando ? 'Editar Servicio' : 'Nuevo Servicio' }}</h4>
+  <!-- Mensajes de estado -->
+  <div *ngIf="cargando" style="padding: 10px; background-color: #e9ecef; margin-bottom: 15px; border-radius: 4px;">
+    Cargando servicios del servidor...
+  </div>
+  <div *ngIf="errorMensaje" style="padding: 10px; background-color: #f8d7da; color: #721c24; margin-bottom: 15px; border-radius: 4px;">
+    {{ errorMensaje }}
+  </div>
+
+  <!-- Formulario para Crear / Editar (SOLO ADMIN) -->
+  <div *ngIf="isAdmin" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; margin-bottom: 20px; background-color: #f9f9f9;">
+    <h4 style="margin-top: 0; color: #333;">{{ editando ? 'Editar Servicio' : 'Nuevo Servicio' }}</h4>
     <form (ngSubmit)="guardarServicio()">
-      <div style="margin-bottom: 10px;">
-        <label style="display: block; font-weight: bold;">Nombre:</label>
-        <input type="text" name="nombre" [(ngModel)]="servicioActual.nombre" required style="width: 100%; padding: 8px;">
+      <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+        <div style="flex: 1;">
+          <label style="display: block; font-weight: bold; margin-bottom: 5px;">Nombre:</label>
+          <input type="text" name="nombre" [(ngModel)]="servicioActual.nombre" required style="width: 100%; padding: 8px; box-sizing: border-box;">
+        </div>
+        <div style="flex: 1;">
+          <label style="display: block; font-weight: bold; margin-bottom: 5px;">Descripción:</label>
+          <input type="text" name="descripcion" [(ngModel)]="servicioActual.descripcion" required style="width: 100%; padding: 8px; box-sizing: border-box;">
+        </div>
       </div>
-      <div style="margin-bottom: 10px;">
-        <label style="display: block; font-weight: bold;">Descripción:</label>
-        <input type="text" name="descripcion" [(ngModel)]="servicioActual.descripcion" required style="width: 100%; padding: 8px;">
-      </div>
-      <div style="margin-bottom: 10px;">
-        <label style="display: block; font-weight: bold;">Precio (S/):</label>
-        <input type="number" name="precio" [(ngModel)]="servicioActual.precio" required style="width: 100%; padding: 8px;">
-      </div>
-      <div style="margin-bottom: 15px;">
-        <label style="display: block; font-weight: bold;">Duración (minutos):</label>
-        <input type="number" name="duracion" [(ngModel)]="servicioActual.duracion" required style="width: 100%; padding: 8px;">
+      <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+        <div style="flex: 1;">
+          <label style="display: block; font-weight: bold; margin-bottom: 5px;">Precio (S/):</label>
+          <input type="number" name="precio" [(ngModel)]="servicioActual.precio" required style="width: 100%; padding: 8px; box-sizing: border-box;">
+        </div>
+        <div style="flex: 1;">
+          <label style="display: block; font-weight: bold; margin-bottom: 5px;">Duración (minutos):</label>
+          <input type="number" name="duracion" [(ngModel)]="servicioActual.duracion" required style="width: 100%; padding: 8px; box-sizing: border-box;">
+        </div>
       </div>
       
-      <button type="submit" style="padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+      <button type="submit" style="padding: 10px 15px; background-color: #0d6efd; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
         {{ editando ? 'Actualizar Servicio' : 'Guardar Servicio' }}
       </button>
-      <button type="button" *ngIf="editando" (click)="resetForm()" style="margin-left: 10px; padding: 10px 15px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+      <button type="button" *ngIf="editando" (click)="resetForm()" style="margin-left: 10px; padding: 10px 15px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
         Cancelar
       </button>
     </form>
   </div>
 
-  <!-- Tabla de Servicios -->
-  <table style="width: 100%; border-collapse: collapse; text-align: left;">
-    <thead style="background-color: #f2f2f2;">
+  <!-- Tabla de Servicios (Visible para todos) -->
+  <table style="width: 100%; border-collapse: collapse; text-align: left; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+    <thead style="background-color: #f8f9fa;">
       <tr>
-        <th style="padding: 10px; border: 1px solid #ddd;">Nº</th> <!-- Cambiado de ID a Nº -->
-        <th style="padding: 10px; border: 1px solid #ddd;">Nombre</th>
-        <th style="padding: 10px; border: 1px solid #ddd;">Descripción</th>
-        <th style="padding: 10px; border: 1px solid #ddd;">Precio</th>
-        <th style="padding: 10px; border: 1px solid #ddd;">Duración</th>
-        <th style="padding: 10px; border: 1px solid #ddd;">Acciones</th>
+        <th style="padding: 12px; border: 1px solid #dee2e6;">Nº</th>
+        <th style="padding: 12px; border: 1px solid #dee2e6;">Nombre</th>
+        <th style="padding: 12px; border: 1px solid #dee2e6;">Descripción</th>
+        <th style="padding: 12px; border: 1px solid #dee2e6;">Precio</th>
+        <th style="padding: 12px; border: 1px solid #dee2e6;">Duración</th>
+        <th *ngIf="isAdmin" style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">Acciones</th>
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let servicio of servicios; let i = index">
-        <td style="padding: 10px; border: 1px solid #ddd;">{{ i + 1 }}</td> <!-- Muestra 1, 2, 3... -->
-        <td style="padding: 10px; border: 1px solid #ddd;">{{ servicio.nombre }}</td>
-        <td style="padding: 10px; border: 1px solid #ddd;">{{ servicio.descripcion }}</td>
-        <td style="padding: 10px; border: 1px solid #ddd;">S/ {{ servicio.precio }}</td>
-        <td style="padding: 10px; border: 1px solid #ddd;">{{ servicio.duracion }} min</td>
-        <td style="padding: 10px; border: 1px solid #ddd;">
-          <button (click)="editarServicio(servicio)" style="background-color: #ffc107; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; margin-right: 5px;">Editar</button>
-          <button (click)="eliminarServicio(servicio.idServicio)" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Eliminar</button>
+      <tr *ngIf="!cargando && servicios.length === 0">
+        <td [attr.colspan]="isAdmin ? 6 : 5" style="padding: 20px; text-align: center; color: #6c757d; border: 1px solid #dee2e6;">
+          No hay servicios registrados.
+        </td>
+      </tr>
+      <tr *ngFor="let servicio of servicios; let i = index" style="background-color: #fff;">
+        <td style="padding: 12px; border: 1px solid #dee2e6;">{{ i + 1 }}</td>
+        <td style="padding: 12px; border: 1px solid #dee2e6; font-weight: 500;">{{ servicio.nombre }}</td>
+        <td style="padding: 12px; border: 1px solid #dee2e6; color: #495057;">{{ servicio.descripcion }}</td>
+        <td style="padding: 12px; border: 1px solid #dee2e6;">S/ {{ servicio.precio }}</td>
+        <td style="padding: 12px; border: 1px solid #dee2e6;">{{ servicio.duracion }} min</td>
+        <td *ngIf="isAdmin" style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">
+          <button (click)="editarServicio(servicio)" style="background-color: #ffc107; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 5px; font-weight: bold; color: #000;">Editar</button>
+          <button (click)="eliminarServicio(servicio.idServicio)" style="background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">Eliminar</button>
         </td>
       </tr>
     </tbody>
