@@ -17,10 +17,6 @@ import { AuthService } from './auth.service';
             <div class="mx-auto w-100" style="max-width: 440px;">
 
               <div class="mb-4">
-                <span class="brand-badge mb-3">
-                  <i class="bi bi-heart-pulse-fill text-teal"></i>
-                  Portal Clínico Veterinario
-                </span>
                 <h2 class="fw-bold text-dark mt-2 mb-1">Bienvenido a PetaPet</h2>
                 <p class="text-secondary small">Ingresa tus credenciales para acceder a la plataforma clínica</p>
               </div>
@@ -91,8 +87,7 @@ import { AuthService } from './auth.service';
           </div>
 
           <div class="col-lg-6 hero-column d-none d-lg-flex">
-            <div class="d-flex align-items-center gap-2">
-              <span class="fs-4">🐾</span>
+            <div>
               <span class="fw-bold fs-5 tracking-wide">PetaPet</span>
             </div>
 
@@ -104,26 +99,6 @@ import { AuthService } from './auth.service';
                 Gestión clínica, control de citas veterinarias y administración de usuarios con la más alta seguridad y calidez humana.
               </p>
 
-              <div class="row g-3">
-                <div class="col-6">
-                  <div class="feature-pill">
-                    <div class="d-flex align-items-center gap-2 text-warning mb-1">
-                      <i class="bi bi-star-fill"></i>
-                      <span class="fw-bold small text-white">Atención 24/7</span>
-                    </div>
-                    <small class="text-white-50">Cuidado médico continuo</small>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="feature-pill">
-                    <div class="d-flex align-items-center gap-2 text-warning mb-1">
-                      <i class="bi bi-patch-check-fill"></i>
-                      <span class="fw-bold small text-white">100% Certificado</span>
-                    </div>
-                    <small class="text-white-50">Especialistas clínicos</small>
-                  </div>
-                </div>
-              </div>
             </div>
 
             <div class="text-white-50 small">
