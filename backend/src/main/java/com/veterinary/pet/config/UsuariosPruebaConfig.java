@@ -25,8 +25,8 @@ public class UsuariosPruebaConfig {
             UsuarioRepository usuarios,
             RolRepository roles,
             PasswordEncoder encoder,
-            @Value("${VET_ADMIN_PASSWORD:contrasenadmin1}") String claveAdmin,
-            @Value("${VET_USER_PASSWORD:contrasenauser2}") String claveEmpleado) {
+            @Value("${VET_ADMIN_PASSWORD:admin123}") String claveAdmin,
+            @Value("${VET_USER_PASSWORD:user123}") String claveUsuario) {
 
         return args -> {
 
@@ -40,13 +40,13 @@ public class UsuariosPruebaConfig {
 
             crearSiNoExiste(
                     usuarios, encoder, admin,
-                    "admin@vet.test", "Admin", "Veterinaria",
+                    "admin@petapet.test", "Admin", "PetaPet",
                     claveAdmin);
 
             crearSiNoExiste(
                     usuarios, encoder, empleado,
-                    "empleado@vet.test", "Empleado", "Recepcion",
-                    claveEmpleado);
+                    "user@petapet.test", "Usuario", "PetaPet",
+                    claveUsuario);
         };
     }
 

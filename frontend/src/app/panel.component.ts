@@ -1,12 +1,13 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
 
 @Component({
   selector: 'app-panel',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   template: `
     <div class="min-vh-100 bg-light d-flex flex-column">
 
@@ -45,6 +46,9 @@ import { AuthService } from './auth.service';
               </p>
             </div>
           </div>
+          <a *ngIf="rol === 'ADMIN'" class="btn btn-primary mt-4" routerLink="/usuarios">
+            Gestionar usuarios
+          </a>
         </div>
       </main>
 

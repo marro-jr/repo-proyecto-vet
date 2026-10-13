@@ -1,0 +1,34 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Backend: iniciar Spring Boot",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoExit",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "$env:JAVA_HOME = 'C:\\Program Files\\Java\\jdk-26.0.2.1'; $env:SPRING_PROFILES_ACTIVE = 'dev'; $env:DB_PASSWORD = Read-Host 'Clave MySQL para root'; Set-Location '${workspaceFolder}\\backend'; mvn spring-boot:run"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Frontend: instalar dependencias",
+      "type": "process",
+      "command": "npm",
+      "args": ["install"],
+      "options": { "cwd": "${workspaceFolder}\\frontend" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Frontend: iniciar Angular",
+      "type": "process",
+      "command": "npm",
+      "args": ["start"],
+      "options": { "cwd": "${workspaceFolder}\\frontend" },
+      "problemMatcher": []
+    }
+  ]
+}
