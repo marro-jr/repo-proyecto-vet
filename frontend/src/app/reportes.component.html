@@ -1,0 +1,66 @@
+<div class="min-vh-100 bg-light d-flex flex-column">
+  <nav class="navbar bg-navbar-black px-4 py-3 shadow-sm">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold text-white" routerLink="/panel">PetaPet</a>
+      <a class="btn btn-outline-light btn-sm" routerLink="/panel">Volver al panel</a>
+    </div>
+  </nav>
+
+  <main class="container my-4 flex-grow-1">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1 class="h3 fw-bold mb-1">Reporte general</h1>
+        <p class="text-secondary mb-0">Resumen de la información registrada en el sistema.</p>
+      </div>
+      <button class="btn btn-outline-primary btn-sm" (click)="cargarResumen()">Actualizar</button>
+    </div>
+
+    <div *ngIf="mensajeError" class="alert alert-danger">{{ mensajeError }}</div>
+    <div *ngIf="estaCargando" class="text-secondary">Cargando reporte...</div>
+
+    <div *ngIf="resumen && !estaCargando" class="row g-4">
+      <div class="col-sm-6 col-lg-3">
+        <div class="dashboard-card h-100">
+          <div class="text-secondary">Usuarios</div>
+          <div class="display-6 fw-bold">{{ resumen.usuarios }}</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <div class="dashboard-card h-100">
+          <div class="text-secondary">Servicios</div>
+          <div class="display-6 fw-bold">{{ resumen.servicios }}</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <div class="dashboard-card h-100">
+          <div class="text-secondary">Propietarios</div>
+          <div class="display-6 fw-bold">{{ resumen.propietarios }}</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <div class="dashboard-card h-100">
+          <div class="text-secondary">Mascotas</div>
+          <div class="display-6 fw-bold">{{ resumen.mascotas }}</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <div class="dashboard-card h-100">
+          <div class="text-secondary">Citas</div>
+          <div class="display-6 fw-bold">{{ resumen.citas }}</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <div class="dashboard-card h-100">
+          <div class="text-secondary">Ventas</div>
+          <div class="display-6 fw-bold">{{ resumen.ventas }}</div>
+        </div>
+      </div>
+      <div class="col-sm-12 col-lg-6">
+        <div class="dashboard-card h-100">
+          <div class="text-secondary">Total de ventas registradas</div>
+          <div class="display-6 fw-bold">S/ {{ resumen.totalVentas }}</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

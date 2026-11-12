@@ -2,31 +2,38 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 
+export interface RespuestaLogin {
+  token: string;
+  tokenType: string;
+  rol: string;
+  correo: string;
+}
+
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8080/auth/login';
+  private readonly apiUrl = 'http://localhost:8080/auth/login';
 
   private token: string | null = localStorage.getItem('token');
   private rol: string | null = localStorage.getItem('rol');
   private correo: string | null = localStorage.getItem('usuarioLogueado');
 
-  login(correo: string, password: string): Observable<any> {
-    return this.http.post<any>(this.apiUrl, { correo, password }).pipe(
-      tap(res => {
-        this.token = res.token;
-        this.rol = res.rol || (correo.toLowerCase().includes('admin') ? 'ADMIN' : 'USER');
-        this.correo = res.correo || correo;
-        localStorage.setItem('token', this.token!);
-        localStorage.setItem('rol', this.rol!);
-        localStorage.setItem('usuarioLogueado', this.correo!);
-      })
+  iniciarSesion(correo: string, password: string): Observable<RespuestaLogin> {
+    return this.http.post<RespuestaLogin>(this.apiUrl, { correo, password }).pipe(
+      tap((respuesta) => {
+        this.token = respuesta.token;
+        this.rol = respuesta.rol;
+        this.correo = respuesta.correo;
+        localStorage.setItem('token', respuesta.token);
+        localStorage.setItem('rol', respuesta.rol);
+        localStorage.setItem('usuarioLogueado', respuesta.correo);
+      }),
     );
   }
 
-  logout() {
+  cerrarSesion(): void {
     this.token = null;
     this.rol = null;
     this.correo = null;

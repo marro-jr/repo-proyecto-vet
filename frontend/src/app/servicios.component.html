@@ -1,168 +1,172 @@
 <div class="min-vh-100 bg-light d-flex flex-column">
-
-  <nav class="navbar navbar-expand-lg bg-navbar-black px-4 py-3 shadow-sm" style="background-color: #212529;">
+  <nav class="navbar bg-navbar-black px-4 py-3 shadow-sm">
     <div class="container-fluid">
-      <a class="navbar-brand fw-bold d-flex align-items-center gap-2 text-white" routerLink="/panel" style="cursor: pointer; text-decoration: none;">
-        <span class="fs-5 tracking-wide">PetaPet</span>
+      <a class="navbar-brand fw-bold text-white" routerLink="/panel">PetaPet</a>
+      <a class="btn btn-outline-light btn-sm" routerLink="/panel">
+        <i class="bi bi-arrow-left me-1"></i>
+        Volver al panel
       </a>
-
-      <div class="d-flex align-items-center ms-auto">
-        <a class="btn btn-outline-light btn-sm" routerLink="/panel">
-          <i class="bi bi-arrow-left me-1"></i> Volver al Panel
-        </a>
-      </div>
     </div>
   </nav>
 
   <main class="container my-4 flex-grow-1">
-
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-      <div>
-        <h1 class="h3 fw-bold mb-1 text-dark">Gestión de Servicios</h1>
-        <p class="text-secondary mb-0">Catálogo clínico y administración de servicios veterinarios.</p>
-      </div>
+    <div class="mb-4">
+      <h1 class="h3 fw-bold mb-1">Gestión de servicios</h1>
+      <p class="text-secondary mb-0">Administra el catálogo de servicios veterinarios.</p>
     </div>
 
-    <div *ngIf="exitoMensaje" class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
-      <i class="bi bi-check-circle-fill"></i>
-      <div>{{ exitoMensaje }}</div>
-      <button type="button" class="btn-close ms-auto" (click)="exitoMensaje = ''"></button>
+    <div *ngIf="mensajeExito" class="alert alert-success" role="status">
+      {{ mensajeExito }}
     </div>
 
-    <div *ngIf="errorMensaje" class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
-      <i class="bi bi-exclamation-triangle-fill"></i>
-      <div>{{ errorMensaje }}</div>
-      <button type="button" class="btn-close ms-auto" (click)="errorMensaje = ''"></button>
+    <div *ngIf="mensajeError" class="alert alert-danger" role="alert">
+      {{ mensajeError }}
     </div>
 
-    <div class="card shadow-sm border-0 rounded-4 mb-4">
-      <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
-        <h5 class="fw-bold mb-0 text-dark">
-          <i class="bi" [ngClass]="editando ? 'bi-pencil-square text-primary' : 'bi-plus-circle-fill text-success'"></i>
-          {{ editando ? 'Modificar Servicio #' + servicioActual.idServicio : 'Registrar Nuevo Servicio' }}
-        </h5>
-        <button *ngIf="editando" type="button" class="btn btn-outline-secondary btn-sm" (click)="resetForm()">
-          <i class="bi bi-x-lg"></i>
-        </button>
-      </div>
-      <div class="card-body px-4 pb-4 pt-2">
-        <form (ngSubmit)="guardarServicio()">
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label small fw-semibold text-secondary">Nombre del Servicio *</label>
-              <input type="text" name="nombre" class="form-control" [(ngModel)]="servicioActual.nombre" placeholder="Ej: Consulta general" required />
-            </div>
+    <section class="dashboard-card mb-4">
+      <h2 class="h5 fw-bold mb-3">
+        {{ estaEditando ? 'Editar servicio' : 'Registrar servicio' }}
+      </h2>
 
-            <div class="col-md-6">
-              <label class="form-label small fw-semibold text-secondary">Descripción *</label>
-              <input type="text" name="descripcion" class="form-control" [(ngModel)]="servicioActual.descripcion" placeholder="Ej: Evaluación médica general" required />
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label small fw-semibold text-secondary">Precio (S/) *</label>
-              <input type="number" name="precio" class="form-control" [(ngModel)]="servicioActual.precio" min="0" step="0.5" placeholder="0.00" required />
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label small fw-semibold text-secondary">Duración (minutos) *</label>
-              <input type="number" name="duracion" class="form-control" [(ngModel)]="servicioActual.duracion" min="1" placeholder="Ej: 30" required />
-            </div>
+      <form (ngSubmit)="guardarServicio()" #formularioServicio="ngForm">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label" for="nombre">Nombre</label>
+            <input
+              id="nombre"
+              name="nombre"
+              class="form-control"
+              [(ngModel)]="formulario.nombre"
+              minlength="2"
+              required
+            />
           </div>
 
-          <div class="d-flex justify-content-end gap-2 mt-4">
-            <button *ngIf="editando" type="button" class="btn btn-outline-secondary px-3" (click)="resetForm()">
-              Cancelar
-            </button>
-            <button type="submit" class="btn btn-primary px-4" [disabled]="guardando">
-              <span *ngIf="guardando" class="spinner-border spinner-border-sm me-1"></span>
-              {{ editando ? 'Actualizar Servicio' : 'Guardar Servicio' }}
-            </button>
+          <div class="col-md-6">
+            <label class="form-label" for="descripcion">Descripción</label>
+            <input
+              id="descripcion"
+              name="descripcion"
+              class="form-control"
+              [(ngModel)]="formulario.descripcion"
+              required
+            />
           </div>
-        </form>
-      </div>
-    </div>
 
-    <div class="card shadow-sm border-0 rounded-4">
-      <div class="card-header bg-white py-3 border-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <div>
-          <h5 class="fw-bold mb-0 text-dark">
-            <i class="bi bi-card-checklist text-success me-2"></i>Catálogo de Servicios Registrados
-          </h5>
+          <div class="col-md-6">
+            <label class="form-label" for="precio">Precio (S/)</label>
+            <input
+              id="precio"
+              name="precio"
+              type="number"
+              class="form-control"
+              [(ngModel)]="formulario.precio"
+              min="0"
+              step="0.5"
+              required
+            />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="duracion">Duración (minutos)</label>
+            <input
+              id="duracion"
+              name="duracion"
+              type="number"
+              class="form-control"
+              [(ngModel)]="formulario.duracion"
+              min="1"
+              required
+            />
+          </div>
         </div>
 
-        <div>
-          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="cargarServicios()" [disabled]="cargando">
-            <i class="bi bi-arrow-clockwise me-1"></i> Refrescar
+        <div class="d-flex gap-2 mt-4">
+          <button
+            class="btn btn-primary"
+            type="submit"
+            [disabled]="estaGuardando || formularioServicio.invalid"
+          >
+            {{
+              estaGuardando
+                ? 'Guardando...'
+                : estaEditando
+                  ? 'Guardar cambios'
+                  : 'Registrar servicio'
+            }}
+          </button>
+          <button
+            *ngIf="estaEditando"
+            class="btn btn-outline-secondary"
+            type="button"
+            (click)="cancelarEdicion()"
+          >
+            Cancelar
           </button>
         </div>
+      </form>
+    </section>
+
+    <section class="dashboard-card">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h2 class="h5 fw-bold mb-0">Servicios registrados</h2>
+        <button
+          class="btn btn-outline-primary btn-sm"
+          type="button"
+          (click)="cargarServicios()"
+          [disabled]="estaCargando"
+        >
+          Actualizar lista
+        </button>
       </div>
 
-      <div class="table-responsive">
+      <div *ngIf="estaCargando" class="text-secondary py-3">Cargando servicios...</div>
+
+      <div *ngIf="!estaCargando && listaServicios.length === 0" class="text-secondary py-3">
+        No hay servicios registrados.
+      </div>
+
+      <div *ngIf="!estaCargando && listaServicios.length > 0" class="table-responsive">
         <table class="table table-hover align-middle mb-0">
-          <thead class="table-light text-secondary small">
+          <thead>
             <tr>
-              <th>Nº</th>
               <th>Nombre</th>
               <th>Descripción</th>
               <th>Precio</th>
               <th>Duración</th>
-              <th class="text-end pe-4">Acciones</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngIf="cargando">
-              <td colspan="6" class="text-center py-4 text-secondary">
-                <div class="spinner-border spinner-border-sm text-primary me-2"></div>
-                Cargando servicios del servidor...
-              </td>
-            </tr>
-
-            <tr *ngIf="!cargando && servicios.length === 0">
-              <td colspan="6" class="text-center py-4 text-muted">
-                No hay servicios registrados en el sistema.
-              </td>
-            </tr>
-
-            <tr *ngFor="let servicio of servicios; let i = index">
-              <td class="fw-bold text-secondary">{{ i + 1 }}</td>
-              <td class="fw-medium text-dark">{{ servicio.nombre }}</td>
-              <td class="text-secondary">{{ servicio.descripcion }}</td>
-              <td class="fw-semibold text-dark">S/ {{ servicio.precio }}</td>
-              <td>
-                <span class="badge bg-light text-dark border">{{ servicio.duracion }} min</span>
-              </td>
-              <td class="text-end pe-4">
+            <tr *ngFor="let servicio of listaServicios">
+              <td>{{ servicio.nombre }}</td>
+              <td>{{ servicio.descripcion }}</td>
+              <td>S/ {{ servicio.precio }}</td>
+              <td>{{ servicio.duracion }} min</td>
+              <td class="text-nowrap">
                 <button
+                  class="btn btn-sm btn-outline-primary me-2"
                   type="button"
-                  class="btn btn-outline-primary btn-sm me-2"
                   (click)="editarServicio(servicio)"
-                  title="Modificar servicio"
                 >
-                  <i class="bi bi-pencil-fill me-1"></i>Editar
+                  Editar
                 </button>
                 <button
+                  class="btn btn-sm btn-outline-danger"
                   type="button"
-                  class="btn btn-outline-danger btn-sm"
-                  (click)="eliminarServicio(servicio.idServicio)"
-                  title="Eliminar servicio"
+                  (click)="eliminarServicio(servicio)"
                 >
-                  <i class="bi bi-trash-fill me-1"></i>Eliminar
+                  Eliminar
                 </button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-
-      <div class="card-footer bg-white border-0 py-3 text-secondary small d-flex justify-content-between align-items-center">
-        <span>Total de servicios: <strong>{{ servicios.length }}</strong></span>
-      </div>
-    </div>
-
+    </section>
   </main>
 
-  <footer class="bg-white border-top py-3 text-center text-muted small mt-auto">
+  <footer class="bg-white border-top py-3 text-center text-muted small">
     PetaPet &bull; Sistema Veterinario
   </footer>
-
 </div>

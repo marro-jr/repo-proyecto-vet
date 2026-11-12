@@ -1,432 +1,123 @@
-import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
-import { UsuarioService, UsuarioDTO, RolDTO } from './usuario.service';
 
 @Component({
   selector: 'app-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, RouterLink],
   template: `
     <div class="min-vh-100 bg-light d-flex flex-column">
-
-      <nav class="navbar navbar-expand-lg bg-navbar-black px-4 py-3 shadow-sm" style="background-color: #212529;">
+      <nav class="navbar navbar-expand-lg bg-navbar-black px-4 py-3 shadow-sm">
         <div class="container-fluid">
-          <a class="navbar-brand fw-bold d-flex align-items-center gap-2 text-white" routerLink="/panel" style="cursor: pointer; text-decoration: none;">
-            <span class="fs-5 tracking-wide">PetaPet</span>
-          </a>
-
-          <div class="d-flex align-items-center ms-4 me-auto">
-             <a routerLink="/servicios" class="btn btn-outline-light btn-sm fw-semibold">
-               <i class="bi bi-card-list me-1"></i> Catálogo de Servicios
-             </a>
-          </div>
+          <a class="navbar-brand fw-bold text-white" routerLink="/panel">PetaPet</a>
 
           <div class="d-flex align-items-center gap-3 ms-auto navbar-user-info">
-            <span class="text-white small fw-medium">{{ usuarioLogueado }}</span>
-            <span [ngClass]="rol === 'ADMIN' ? 'badge bg-danger' : 'badge bg-primary'">
+            <span class="text-white small fw-medium">{{ correoUsuario }}</span>
+            <span class="badge" [ngClass]="esAdministrador ? 'bg-danger' : 'bg-primary'">
               ROL: {{ rol }}
             </span>
-
-            <button type="button" class="btn btn-outline-light btn-sm ms-2" (click)="cerrarSesion()">
+            <button type="button" class="btn btn-outline-light btn-sm" (click)="cerrarSesion()">
               <i class="bi bi-box-arrow-right me-1"></i>
-              Cerrar Sesión
+              Cerrar sesión
             </button>
           </div>
         </div>
       </nav>
 
-      <main class="container my-4 flex-grow-1">
-
-        <div *ngIf="exitoMensaje" class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
-          <i class="bi bi-check-circle-fill"></i>
-          <div>{{ exitoMensaje }}</div>
-          <button type="button" class="btn-close ms-auto" (click)="exitoMensaje = ''"></button>
+      <main class="container my-5 flex-grow-1">
+        <div class="mb-4">
+          <h1 class="h3 fw-bold mb-1">Panel principal</h1>
+          <p class="text-secondary mb-0">
+            Bienvenido, {{ correoUsuario }}. Selecciona una opción para continuar.
+          </p>
         </div>
 
-        <div *ngIf="errorMensaje" class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
-          <i class="bi bi-exclamation-triangle-fill"></i>
-          <div>{{ errorMensaje }}</div>
-          <button type="button" class="btn-close ms-auto" (click)="errorMensaje = ''"></button>
-        </div>
-
-        <div *ngIf="rol !== 'ADMIN'" class="dashboard-card text-center py-5 bg-white shadow-sm rounded-4 mt-4">
-          <div class="fs-1 text-primary mb-3">
-            <i class="bi bi-card-checklist"></i>
-          </div>
-          <h4 class="fw-bold text-dark mb-4">Catálogo de Servicios</h4>
-          <a class="btn btn-primary px-4 py-2" routerLink="/servicios">
-            <i class="bi bi-clipboard2-pulse me-2"></i> Ir al Catálogo de Servicios
-          </a>
-        </div>
-
-        <div *ngIf="rol === 'ADMIN'">
-
-          <div *ngIf="mostrarFormulario" class="card shadow-sm border-0 rounded-4 mb-4">
-            <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
-              <h5 class="fw-bold mb-0 text-dark">
-                <i class="bi" [ngClass]="editandoId ? 'bi-pencil-square text-primary' : 'bi-person-plus-fill text-success'"></i>
-                {{ editandoId ? 'Modificar Usuario #' + editandoId : 'Registrar Nuevo Usuario' }}
-              </h5>
-              <button type="button" class="btn btn-outline-secondary btn-sm" (click)="cancelarFormulario()">
-                <i class="bi bi-x-lg"></i>
-              </button>
-            </div>
-            <div class="card-body px-4 pb-4 pt-2">
-              <form (submit)="$event.preventDefault(); guardarUsuario()" autocomplete="off">
-                <div class="row g-3">
-                  <div class="col-md-6">
-                    <label class="form-label small fw-semibold text-secondary">Nombre *</label>
-                    <input type="text" class="form-control" [(ngModel)]="formNombre" name="formNombre" placeholder="Ej: Carlos" required />
-                  </div>
-                  <div class="col-md-6">
-                    <label class="form-label small fw-semibold text-secondary">Apellido *</label>
-                    <input type="text" class="form-control" [(ngModel)]="formApellido" name="formApellido" placeholder="Ej: Mendoza" required />
-                  </div>
-
-                  <div class="col-md-6">
-                    <label class="form-label small fw-semibold text-secondary">Correo Institucional *</label>
-                    <input type="email" class="form-control" [(ngModel)]="formCorreo" name="formCorreo" placeholder="usuario@vet.test" required />
-                  </div>
-
-                  <div class="col-md-6">
-                    <label class="form-label small fw-semibold text-secondary">
-                      Contraseña {{ editandoId ? '(Opcional al editar)' : '*' }}
-                    </label>
-                    <input
-                      type="password"
-                      class="form-control"
-                      [(ngModel)]="formPassword"
-                      name="formPassword"
-                      [placeholder]="editandoId ? 'Dejar en blanco para mantener la actual' : 'Ingrese contraseña'"
-                      [required]="!editandoId"
-                    />
-                  </div>
-
-                  <div class="col-md-6">
-                    <label class="form-label small fw-semibold text-secondary">Rol *</label>
-                    <select class="form-select" [(ngModel)]="formIdRol" name="formIdRol" required>
-                      <option [ngValue]="null" disabled>Selecciona un rol</option>
-                      <option *ngFor="let r of roles" [ngValue]="r.idRol">
-                        {{ r.nombre }} - {{ r.descripcion }}
-                      </option>
-                    </select>
-                  </div>
-
-                  <div class="col-md-6">
-                    <label class="form-label small fw-semibold text-secondary">Estado *</label>
-                    <select class="form-select" [(ngModel)]="formEstado" name="formEstado" required>
-                      <option value="ACTIVO">ACTIVO</option>
-                      <option value="INACTIVO">INACTIVO</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div class="d-flex justify-content-end gap-2 mt-4">
-                  <button type="button" class="btn btn-outline-secondary px-3" (click)="cancelarFormulario()">
-                    Cancelar
-                  </button>
-                  <button type="submit" class="btn btn-primary px-4" [disabled]="guardando">
-                    <span *ngIf="guardando" class="spinner-border spinner-border-sm me-1"></span>
-                    {{ editandoId ? 'Actualizar Usuario' : 'Crear Usuario' }}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-
-          <div class="card shadow-sm border-0 rounded-4">
-            <div class="card-header bg-white py-3 border-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
-              <div>
-                <h5 class="fw-bold mb-0 text-dark">
-                  <i class="bi bi-people-fill text-success me-2"></i>Gestión de Usuarios Clínicos
-                </h5>
+        <div class="row g-4">
+          <div class="col-md-6">
+            <section class="dashboard-card h-100">
+              <div class="fs-1 text-primary mb-3">
+                <i class="bi bi-card-checklist"></i>
               </div>
-
-              <div class="d-flex gap-2">
-                <button type="button" class="btn btn-outline-secondary btn-sm" (click)="cargarUsuarios()" [disabled]="cargando">
-                  <i class="bi bi-arrow-clockwise me-1"></i>
-                  Refrescar
-                </button>
-                <button *ngIf="!mostrarFormulario" type="button" class="btn btn-success btn-sm" (click)="abrirNuevo()">
-                  <i class="bi bi-person-plus-fill me-1"></i>
-                  Nuevo Usuario
-                </button>
-              </div>
-            </div>
-
-            <div class="table-responsive">
-              <table class="table table-hover align-middle mb-0">
-                <thead class="table-light text-secondary small">
-                  <tr>
-                    <th># ID</th>
-                    <th>Nombre Completo</th>
-                    <th>Correo</th>
-                    <th>Rol</th>
-                    <th>Estado</th>
-                    <th>Fecha Alta</th>
-                    <th class="text-end pe-4">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngIf="cargando">
-                    <td colspan="7" class="text-center py-4 text-secondary">
-                      <div class="spinner-border spinner-border-sm text-primary me-2"></div>
-                      Cargando listado de usuarios...
-                    </td>
-                  </tr>
-
-                  <tr *ngIf="!cargando && usuarios.length === 0">
-                    <td colspan="7" class="text-center py-4 text-muted">
-                      No hay usuarios registrados en el sistema.
-                    </td>
-                  </tr>
-
-                  <tr *ngFor="let u of usuarios">
-                    <td class="fw-bold text-secondary">#{{ u.idUsuario }}</td>
-                    <td class="fw-medium text-dark">{{ u.nombre }} {{ u.apellido }}</td>
-                    <td>{{ u.correo }}</td>
-                    <td>
-                      <span [ngClass]="u.rol === 'ADMIN' ? 'badge bg-danger' : 'badge bg-primary'">
-                        {{ u.rol }}
-                      </span>
-                    </td>
-                    <td>
-                      <span class="badge" [ngClass]="u.estado === 'ACTIVO' ? 'bg-success' : 'bg-secondary'">
-                        {{ u.estado }}
-                      </span>
-                    </td>
-                    <td class="text-secondary small">{{ u.fechaCreacion }}</td>
-                    <td class="text-end pe-4">
-                      <button
-                        type="button"
-                        class="btn btn-outline-primary btn-sm me-2"
-                        (click)="abrirEditar(u)"
-                        title="Modificar usuario"
-                      >
-                        <i class="bi bi-pencil-fill"></i>
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-outline-danger btn-sm"
-                        (click)="eliminar(u)"
-                        title="Eliminar usuario"
-                      >
-                        <i class="bi bi-trash-fill"></i>
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="card-footer bg-white border-0 py-3 text-secondary small d-flex justify-content-between align-items-center">
-              <span>Total de usuarios: <strong>{{ usuarios.length }}</strong></span>
-            </div>
+              <h2 class="h5 fw-bold">Gestión de servicios</h2>
+              <p class="text-secondary">
+                Consulta, registra, modifica y elimina los servicios veterinarios.
+              </p>
+              <a class="btn btn-primary" routerLink="/servicios"> Ir a servicios </a>
+            </section>
           </div>
 
-        </div>
+          <div class="col-md-6">
+            <section class="dashboard-card h-100">
+              <div class="fs-1 text-info mb-3">
+                <i class="bi bi-calendar-check"></i>
+              </div>
+              <h2 class="h5 fw-bold">Gestión de citas</h2>
+              <p class="text-secondary">Registra y administra las citas veterinarias.</p>
+              <a class="btn btn-info text-white" routerLink="/citas"> Ir a citas </a>
+            </section>
+          </div>
 
+          <div class="col-md-6">
+            <section class="dashboard-card h-100">
+              <div class="fs-1 text-warning mb-3">
+                <i class="bi bi-receipt"></i>
+              </div>
+              <h2 class="h5 fw-bold">Gestión de ventas</h2>
+              <p class="text-secondary">Registra y consulta las ventas realizadas.</p>
+              <a class="btn btn-warning" routerLink="/ventas"> Ir a ventas </a>
+            </section>
+          </div>
+
+          <div *ngIf="esAdministrador" class="col-md-6">
+            <section class="dashboard-card h-100">
+              <div class="fs-1 text-success mb-3">
+                <i class="bi bi-people-fill"></i>
+              </div>
+              <h2 class="h5 fw-bold">Gestión de usuarios</h2>
+              <p class="text-secondary">Administra las cuentas, roles y estados de los usuarios.</p>
+              <a class="btn btn-success" routerLink="/usuarios"> Ir a usuarios </a>
+            </section>
+          </div>
+
+          <div *ngIf="esAdministrador" class="col-md-6">
+            <section class="dashboard-card h-100">
+              <div class="fs-1 text-danger mb-3">
+                <i class="bi bi-bar-chart-fill"></i>
+              </div>
+              <h2 class="h5 fw-bold">Reportes</h2>
+              <p class="text-secondary">Consulta el resumen general del sistema.</p>
+              <a class="btn btn-danger" routerLink="/reportes"> Ir a reportes </a>
+            </section>
+          </div>
+        </div>
       </main>
 
-      <footer class="bg-white border-top py-3 text-center text-muted small mt-auto">
+      <footer class="bg-white border-top py-3 text-center text-muted small">
         PetaPet &bull; Sistema Veterinario
       </footer>
-
     </div>
-  `
+  `,
 })
-export class PanelComponent implements OnInit {
+export class PanelComponent {
   private authService = inject(AuthService);
-  private usuarioService = inject(UsuarioService);
   private router = inject(Router);
-  private cdr = inject(ChangeDetectorRef);
-
-  usuarios: UsuarioDTO[] = [];
-  roles: RolDTO[] = [];
-
-  cargando = false;
-  guardando = false;
-  errorMensaje = '';
-  exitoMensaje = '';
-
-  mostrarFormulario = false;
-  editandoId: number | null = null;
-
-  formNombre = '';
-  formApellido = '';
-  formCorreo = '';
-  formPassword = '';
-  formIdRol: number | null = null;
-  formEstado: 'ACTIVO' | 'INACTIVO' = 'ACTIVO';
 
   get rol(): string | null {
     return this.authService.obtenerRol();
   }
 
-  get usuarioLogueado(): string | null {
+  get correoUsuario(): string | null {
     return this.authService.obtenerCorreo();
   }
 
-  ngOnInit() {
-    if (this.rol === 'ADMIN') {
-      this.cargarRoles();
-      this.cargarUsuarios();
-    }
+  get esAdministrador(): boolean {
+    return this.rol === 'ADMIN';
   }
 
-  cargarRoles() {
-    this.usuarioService.obtenerRoles().subscribe({
-      next: (data) => {
-        this.roles = data;
-        if (this.roles.length > 0 && this.formIdRol === null) {
-          this.formIdRol = this.roles[0].idRol;
-        }
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
-  cargarUsuarios() {
-    this.cargando = true;
-    this.errorMensaje = '';
-    this.cdr.detectChanges();
-    this.usuarioService.listarUsuarios().subscribe({
-      next: (data) => {
-        this.usuarios = data;
-        this.cargando = false;
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        this.cargando = false;
-        this.errorMensaje = err.error?.error || 'No fue posible cargar el listado de usuarios.';
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
-  abrirNuevo() {
-    this.editandoId = null;
-    this.formNombre = '';
-    this.formApellido = '';
-    this.formCorreo = '';
-    this.formPassword = '';
-    this.formEstado = 'ACTIVO';
-    this.formIdRol = this.roles.length > 0 ? this.roles[0].idRol : null;
-    this.mostrarFormulario = true;
-    this.errorMensaje = '';
-    this.exitoMensaje = '';
-    this.cdr.detectChanges();
-  }
-
-  abrirEditar(u: UsuarioDTO) {
-    this.editandoId = u.idUsuario || null;
-    this.formNombre = u.nombre;
-    this.formApellido = u.apellido;
-    this.formCorreo = u.correo;
-    this.formPassword = '';
-    this.formEstado = u.estado || 'ACTIVO';
-    this.formIdRol = u.idRol;
-    this.mostrarFormulario = true;
-    this.errorMensaje = '';
-    this.exitoMensaje = '';
-    this.cdr.detectChanges();
-  }
-
-  cancelarFormulario() {
-    this.mostrarFormulario = false;
-    this.editandoId = null;
-    this.cdr.detectChanges();
-  }
-
-  guardarUsuario() {
-    if (!this.formNombre || !this.formApellido || !this.formCorreo || !this.formIdRol) {
-      this.errorMensaje = 'Por favor completa todos los campos requeridos.';
-      this.cdr.detectChanges();
-      return;
-    }
-
-    if (!this.editandoId && !this.formPassword) {
-      this.errorMensaje = 'La contraseña es obligatoria para registrar un nuevo usuario.';
-      this.cdr.detectChanges();
-      return;
-    }
-
-    this.guardando = true;
-    this.errorMensaje = '';
-    this.exitoMensaje = '';
-    this.cdr.detectChanges();
-
-    const payload: UsuarioDTO = {
-      nombre: this.formNombre.trim(),
-      apellido: this.formApellido.trim(),
-      correo: this.formCorreo.trim(),
-      password: this.formPassword.trim(),
-      estado: this.formEstado,
-      idRol: this.formIdRol
-    };
-
-    if (this.editandoId) {
-      this.usuarioService.actualizarUsuario(this.editandoId, payload).subscribe({
-        next: () => {
-          this.guardando = false;
-          this.exitoMensaje = 'Usuario actualizado correctamente.';
-          this.mostrarFormulario = false;
-          this.cargarUsuarios();
-          this.cdr.detectChanges();
-        },
-        error: (err) => {
-          this.guardando = false;
-          this.errorMensaje = err.error?.error || 'No fue posible actualizar el usuario.';
-          this.cdr.detectChanges();
-        }
-      });
-    } else {
-      this.usuarioService.registrarUsuario(payload).subscribe({
-        next: () => {
-          this.guardando = false;
-          this.exitoMensaje = 'Usuario registrado exitosamente.';
-          this.mostrarFormulario = false;
-          this.cargarUsuarios();
-          this.cdr.detectChanges();
-        },
-        error: (err) => {
-          this.guardando = false;
-          this.errorMensaje = err.error?.error || 'No fue posible registrar el usuario.';
-          this.cdr.detectChanges();
-        }
-      });
-    }
-  }
-
-  eliminar(u: UsuarioDTO) {
-    if (!u.idUsuario) return;
-    const confirmacion = confirm(`¿Estás seguro de eliminar al usuario ${u.nombre} ${u.apellido} (${u.correo})?`);
-    if (!confirmacion) return;
-
-    this.errorMensaje = '';
-    this.exitoMensaje = '';
-    this.cdr.detectChanges();
-    this.usuarioService.eliminarUsuario(u.idUsuario).subscribe({
-      next: () => {
-        this.exitoMensaje = `Usuario #${u.idUsuario} eliminado exitosamente.`;
-        this.cargarUsuarios();
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        this.errorMensaje = err.error?.error || 'No fue posible eliminar el usuario.';
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
-  cerrarSesion() {
-    this.authService.logout();
+  cerrarSesion(): void {
+    this.authService.cerrarSesion();
     this.router.navigate(['/login']);
   }
 }

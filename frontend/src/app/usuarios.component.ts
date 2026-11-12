@@ -1,67 +1,150 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { Usuario, UsuarioDatos, UsuariosService, Rol } from './usuarios.service';
+import { DatosUsuario, Rol, Usuario, UsuarioService } from './usuario.service';
 
 @Component({
   selector: 'app-usuarios',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
-    <div class="min-vh-100 bg-light py-4">
-      <div class="container">
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-          <div>
-            <h1 class="h3 fw-bold mb-1">Gestión de usuarios</h1>
-            <p class="text-secondary mb-0">Lista, registra y administra las cuentas del sistema.</p>
-          </div>
-          <a class="btn btn-outline-secondary" routerLink="/panel">Volver al panel</a>
+    <div class="min-vh-100 bg-light d-flex flex-column">
+      <nav class="navbar bg-navbar-black px-4 py-3 shadow-sm">
+        <div class="container-fluid">
+          <a class="navbar-brand fw-bold text-white" routerLink="/panel">PetaPet</a>
+          <a class="btn btn-outline-light btn-sm" routerLink="/panel">
+            <i class="bi bi-arrow-left me-1"></i>
+            Volver al panel
+          </a>
+        </div>
+      </nav>
+
+      <main class="container my-4 flex-grow-1">
+        <div class="mb-4">
+          <h1 class="h3 fw-bold mb-1">Gestión de usuarios</h1>
+          <p class="text-secondary mb-0">Administra las cuentas y roles del sistema.</p>
         </div>
 
-        <div *ngIf="mensaje" class="alert alert-success" role="status">{{ mensaje }}</div>
-        <div *ngIf="error" class="alert alert-danger" role="alert">{{ error }}</div>
+        <div *ngIf="mensajeExito" class="alert alert-success" role="status">
+          {{ mensajeExito }}
+        </div>
+
+        <div *ngIf="mensajeError" class="alert alert-danger" role="alert">
+          {{ mensajeError }}
+        </div>
 
         <section class="dashboard-card mb-4">
-          <h2 class="h5 fw-bold mb-3">{{ usuarioEditando ? 'Editar usuario' : 'Registrar usuario' }}</h2>
-          <form (ngSubmit)="guardar()" #formUsuario="ngForm">
+          <h2 class="h5 fw-bold mb-3">
+            {{ usuarioSeleccionado ? 'Editar usuario' : 'Registrar usuario' }}
+          </h2>
+
+          <form (ngSubmit)="guardarUsuario()" #formularioUsuario="ngForm">
             <div class="row g-3">
               <div class="col-md-6">
                 <label class="form-label" for="nombre">Nombre</label>
-                <input id="nombre" name="nombre" class="form-control" [(ngModel)]="datos.nombre" required />
+                <input
+                  id="nombre"
+                  name="nombre"
+                  class="form-control"
+                  [(ngModel)]="formulario.nombre"
+                  minlength="2"
+                  required
+                />
               </div>
+
               <div class="col-md-6">
                 <label class="form-label" for="apellido">Apellido</label>
-                <input id="apellido" name="apellido" class="form-control" [(ngModel)]="datos.apellido" required />
+                <input
+                  id="apellido"
+                  name="apellido"
+                  class="form-control"
+                  [(ngModel)]="formulario.apellido"
+                  minlength="2"
+                  required
+                />
               </div>
+
               <div class="col-md-6">
                 <label class="form-label" for="correo">Correo</label>
-                <input id="correo" name="correo" type="email" class="form-control" [(ngModel)]="datos.correo" required />
+                <input
+                  id="correo"
+                  name="correo"
+                  type="email"
+                  class="form-control"
+                  [(ngModel)]="formulario.correo"
+                  email
+                  required
+                />
               </div>
+
               <div class="col-md-6">
-                <label class="form-label" for="password">{{ usuarioEditando ? 'Nueva contraseña (opcional)' : 'Contraseña' }}</label>
-                <input id="password" name="password" type="password" class="form-control"
-                  [(ngModel)]="datos.password" [required]="!usuarioEditando" />
+                <label class="form-label" for="password">
+                  {{ usuarioSeleccionado ? 'Nueva contraseña (opcional)' : 'Contraseña' }}
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  class="form-control"
+                  [(ngModel)]="formulario.password"
+                  minlength="6"
+                  [required]="!usuarioSeleccionado"
+                />
               </div>
+
+              <div class="col-md-6">
+                <label class="form-label" for="rol">Rol</label>
+                <select
+                  id="rol"
+                  name="rol"
+                  class="form-select"
+                  [(ngModel)]="formulario.idRol"
+                  required
+                >
+                  <option [ngValue]="0" disabled>Selecciona un rol</option>
+                  <option *ngFor="let rol of listaRoles" [ngValue]="rol.idRol">
+                    {{ rol.nombre }} - {{ rol.descripcion }}
+                  </option>
+                </select>
+              </div>
+
               <div class="col-md-6">
                 <label class="form-label" for="estado">Estado</label>
-                <select id="estado" name="estado" class="form-select" [(ngModel)]="datos.estado">
+                <select
+                  id="estado"
+                  name="estado"
+                  class="form-select"
+                  [(ngModel)]="formulario.estado"
+                  required
+                >
                   <option value="ACTIVO">Activo</option>
                   <option value="INACTIVO">Inactivo</option>
                 </select>
               </div>
-              <div class="col-md-6">
-                <label class="form-label" for="rol">Rol</label>
-                <select id="rol" name="rol" class="form-select" [(ngModel)]="datos.idRol" required>
-                  <option *ngFor="let rol of roles" [ngValue]="rol.idRol">{{ rol.nombre }}</option>
-                </select>
-              </div>
             </div>
+
             <div class="d-flex gap-2 mt-4">
-              <button class="btn btn-primary" type="submit" [disabled]="guardando || formUsuario.invalid">
-                {{ guardando ? 'Guardando...' : (usuarioEditando ? 'Guardar cambios' : 'Registrar usuario') }}
+              <button
+                class="btn btn-primary"
+                type="submit"
+                [disabled]="estaGuardando || formularioUsuario.invalid"
+              >
+                {{
+                  estaGuardando
+                    ? 'Guardando...'
+                    : usuarioSeleccionado
+                      ? 'Guardar cambios'
+                      : 'Registrar usuario'
+                }}
               </button>
-              <button *ngIf="usuarioEditando" class="btn btn-outline-secondary" type="button" (click)="cancelarEdicion()">
+              <button
+                *ngIf="usuarioSeleccionado"
+                class="btn btn-outline-secondary"
+                type="button"
+                (click)="cancelarEdicion()"
+              >
                 Cancelar
               </button>
             </div>
@@ -71,160 +154,198 @@ import { Usuario, UsuarioDatos, UsuariosService, Rol } from './usuarios.service'
         <section class="dashboard-card">
           <div class="d-flex align-items-center justify-content-between mb-3">
             <h2 class="h5 fw-bold mb-0">Usuarios registrados</h2>
-            <button class="btn btn-outline-primary btn-sm" type="button" (click)="cargarUsuarios()" [disabled]="cargando">
+            <button
+              class="btn btn-outline-primary btn-sm"
+              type="button"
+              (click)="cargarUsuarios()"
+              [disabled]="estaCargando"
+            >
               Actualizar lista
             </button>
           </div>
 
-          <div *ngIf="cargando" class="text-secondary py-3">Cargando usuarios...</div>
-          <div *ngIf="!cargando && usuarios.length === 0" class="text-secondary py-3">
-            Todavía no hay usuarios registrados.
+          <div *ngIf="estaCargando" class="text-secondary py-3">Cargando usuarios...</div>
+
+          <div *ngIf="!estaCargando && listaUsuarios.length === 0" class="text-secondary py-3">
+            No hay usuarios registrados.
           </div>
 
-          <div *ngIf="!cargando && usuarios.length > 0" class="table-responsive">
+          <div *ngIf="!estaCargando && listaUsuarios.length > 0" class="table-responsive">
             <table class="table table-hover align-middle mb-0">
               <thead>
                 <tr>
-                  <th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th><th>Creación</th><th>Acciones</th>
+                  <th>Nombre</th>
+                  <th>Correo</th>
+                  <th>Rol</th>
+                  <th>Estado</th>
+                  <th>Creación</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let usuario of usuarios">
+                <tr *ngFor="let usuario of listaUsuarios">
                   <td>{{ usuario.nombre }} {{ usuario.apellido }}</td>
                   <td>{{ usuario.correo }}</td>
-                  <td>{{ usuario.nombreRol }}</td>
+                  <td>{{ usuario.rol }}</td>
                   <td>{{ usuario.estado }}</td>
                   <td>{{ usuario.fechaCreacion }}</td>
                   <td class="text-nowrap">
-                    <button class="btn btn-sm btn-outline-primary me-2" type="button" (click)="editar(usuario)">Editar</button>
-                    <button class="btn btn-sm btn-outline-danger" type="button" (click)="eliminar(usuario)">Eliminar</button>
+                    <button
+                      class="btn btn-sm btn-outline-primary me-2"
+                      type="button"
+                      (click)="editarUsuario(usuario)"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      class="btn btn-sm btn-outline-danger"
+                      type="button"
+                      (click)="eliminarUsuario(usuario)"
+                    >
+                      Eliminar
+                    </button>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
         </section>
-      </div>
+      </main>
     </div>
-  `
+  `,
 })
 export class UsuariosComponent implements OnInit {
-  private usuariosService = inject(UsuariosService);
-  private cdr = inject(ChangeDetectorRef);
+  private usuarioService = inject(UsuarioService);
+  private detectorCambios = inject(ChangeDetectorRef);
 
-  usuarios: Usuario[] = [];
-  roles: Rol[] = [];
-  usuarioEditando: Usuario | null = null;
-  cargando = false;
-  guardando = false;
-  mensaje = '';
-  error = '';
-
-  datos: UsuarioDatos = this.datosVacios();
+  listaUsuarios: Usuario[] = [];
+  listaRoles: Rol[] = [];
+  usuarioSeleccionado: Usuario | null = null;
+  formulario: DatosUsuario = this.crearFormularioVacio();
+  estaCargando = false;
+  estaGuardando = false;
+  mensajeExito = '';
+  mensajeError = '';
 
   ngOnInit(): void {
-    this.usuariosService.listarRoles().subscribe({
-      next: roles => {
-        this.roles = roles;
-        this.datos.idRol = roles.find(rol => rol.nombre === 'USER')?.idRol ?? roles[0]?.idRol ?? 0;
-        this.cdr.detectChanges();
-      },
-      error: err => {
-        this.mostrarError(err);
-        this.cdr.detectChanges();
-      }
-    });
+    this.cargarRoles();
     this.cargarUsuarios();
   }
 
-  cargarUsuarios(): void {
-    this.cargando = true;
-    this.cdr.detectChanges();
-    this.usuariosService.listar().subscribe({
-      next: usuarios => {
-        this.usuarios = usuarios;
-        this.cargando = false;
-        this.cdr.detectChanges();
+  cargarRoles(): void {
+    this.usuarioService.listarRoles().subscribe({
+      next: (roles) => {
+        this.listaRoles = roles;
+        this.formulario.idRol = this.obtenerRolPredeterminado();
+        this.detectorCambios.detectChanges();
       },
-      error: err => {
-        this.cargando = false;
-        this.mostrarError(err);
-        this.cdr.detectChanges();
-      }
+      error: (error) => this.mostrarError(error, 'No fue posible cargar los roles.'),
     });
   }
 
-  guardar(): void {
-    this.error = '';
-    this.mensaje = '';
-    this.guardando = true;
-    this.cdr.detectChanges();
-    const peticion = this.usuarioEditando
-      ? this.usuariosService.actualizar(this.usuarioEditando.idUsuario, this.datos)
-      : this.usuariosService.registrar(this.datos);
+  cargarUsuarios(): void {
+    this.estaCargando = true;
+    this.mensajeError = '';
+    this.detectorCambios.detectChanges();
 
-    peticion.subscribe({
+    this.usuarioService.listarUsuarios().subscribe({
+      next: (usuarios) => {
+        this.listaUsuarios = usuarios;
+        this.estaCargando = false;
+        this.detectorCambios.detectChanges();
+      },
+      error: (error) => {
+        this.estaCargando = false;
+        this.mostrarError(error, 'No fue posible cargar los usuarios.');
+      },
+    });
+  }
+
+  guardarUsuario(): void {
+    this.estaGuardando = true;
+    this.mensajeExito = '';
+    this.mensajeError = '';
+    this.detectorCambios.detectChanges();
+
+    const solicitud = this.usuarioSeleccionado
+      ? this.usuarioService.actualizarUsuario(this.usuarioSeleccionado.idUsuario, this.formulario)
+      : this.usuarioService.registrarUsuario(this.formulario);
+
+    solicitud.subscribe({
       next: () => {
-        this.mensaje = this.usuarioEditando ? 'Usuario actualizado.' : 'Usuario registrado.';
-        this.guardando = false;
+        this.mensajeExito = this.usuarioSeleccionado
+          ? 'Usuario actualizado correctamente.'
+          : 'Usuario registrado correctamente.';
+        this.estaGuardando = false;
         this.cancelarEdicion();
         this.cargarUsuarios();
-        this.cdr.detectChanges();
       },
-      error: err => {
-        this.guardando = false;
-        this.mostrarError(err);
-        this.cdr.detectChanges();
-      }
+      error: (error) => {
+        this.estaGuardando = false;
+        this.mostrarError(error, 'No fue posible guardar el usuario.');
+      },
     });
   }
 
-  editar(usuario: Usuario): void {
-    this.usuarioEditando = usuario;
-    this.datos = {
+  editarUsuario(usuario: Usuario): void {
+    this.usuarioSeleccionado = usuario;
+    this.formulario = {
       nombre: usuario.nombre,
       apellido: usuario.apellido,
       correo: usuario.correo,
       password: '',
       estado: usuario.estado,
-      idRol: usuario.idRol
+      idRol: usuario.idRol,
     };
-    this.mensaje = '';
-    this.error = '';
-    this.cdr.detectChanges();
+    this.mensajeExito = '';
+    this.mensajeError = '';
+    this.detectorCambios.detectChanges();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   cancelarEdicion(): void {
-    this.usuarioEditando = null;
-    this.datos = this.datosVacios();
-    this.datos.idRol = this.roles.find(rol => rol.nombre === 'USER')?.idRol ?? this.roles[0]?.idRol ?? 0;
-    this.cdr.detectChanges();
+    this.usuarioSeleccionado = null;
+    this.formulario = this.crearFormularioVacio();
+    this.detectorCambios.detectChanges();
   }
 
-  eliminar(usuario: Usuario): void {
-    if (!window.confirm(`¿Eliminar a ${usuario.nombre} ${usuario.apellido}?`)) return;
-    this.error = '';
-    this.mensaje = '';
-    this.cdr.detectChanges();
-    this.usuariosService.eliminar(usuario.idUsuario).subscribe({
+  eliminarUsuario(usuario: Usuario): void {
+    const nombreCompleto = usuario.nombre + ' ' + usuario.apellido;
+    if (!window.confirm('¿Eliminar a ' + nombreCompleto + '?')) {
+      return;
+    }
+
+    this.mensajeExito = '';
+    this.mensajeError = '';
+    this.usuarioService.eliminarUsuario(usuario.idUsuario).subscribe({
       next: () => {
-        this.mensaje = 'Usuario eliminado.';
+        this.mensajeExito = 'Usuario eliminado correctamente.';
         this.cargarUsuarios();
-        this.cdr.detectChanges();
       },
-      error: err => {
-        this.mostrarError(err);
-        this.cdr.detectChanges();
-      }
+      error: (error) => this.mostrarError(error, 'No fue posible eliminar el usuario.'),
     });
   }
 
-  private datosVacios(): UsuarioDatos {
-    return { nombre: '', apellido: '', correo: '', password: '', estado: 'ACTIVO', idRol: 0 };
+  private crearFormularioVacio(): DatosUsuario {
+    return {
+      nombre: '',
+      apellido: '',
+      correo: '',
+      password: '',
+      estado: 'ACTIVO',
+      idRol: this.obtenerRolPredeterminado(),
+    };
   }
 
-  private mostrarError(err: any): void {
-    this.error = err?.error?.detail || err?.error?.error || 'No se pudo completar la operación. Verifica el backend y el acceso de administrador.';
+  private obtenerRolPredeterminado(): number {
+    return (
+      this.listaRoles.find((rol) => rol.nombre === 'USER')?.idRol ?? this.listaRoles[0]?.idRol ?? 0
+    );
+  }
+
+  private mostrarError(error: HttpErrorResponse, mensajePredeterminado: string): void {
+    const respuesta = error.error as { error?: string; detail?: string } | null;
+    this.mensajeError = respuesta?.detail || respuesta?.error || mensajePredeterminado;
+    this.detectorCambios.detectChanges();
   }
 }

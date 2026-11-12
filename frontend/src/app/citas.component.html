@@ -1,0 +1,185 @@
+<div class="min-vh-100 bg-light d-flex flex-column">
+  <nav class="navbar bg-navbar-black px-4 py-3 shadow-sm">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold text-white" routerLink="/panel">PetaPet</a>
+      <a class="btn btn-outline-light btn-sm" routerLink="/panel">Volver al panel</a>
+    </div>
+  </nav>
+
+  <main class="container my-4 flex-grow-1">
+    <h1 class="h3 fw-bold mb-1">Gestión de citas</h1>
+    <p class="text-secondary mb-4">Registra y administra las citas veterinarias.</p>
+
+    <div *ngIf="mensajeExito" class="alert alert-success">{{ mensajeExito }}</div>
+    <div *ngIf="mensajeError" class="alert alert-danger">{{ mensajeError }}</div>
+
+    <section class="dashboard-card mb-4">
+      <h2 class="h5 fw-bold mb-3">
+        {{ citaSeleccionada ? 'Editar cita' : 'Registrar cita' }}
+      </h2>
+
+      <form (ngSubmit)="guardarCita()" #formularioCita="ngForm">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label" for="mascota">Mascota</label>
+            <select
+              id="mascota"
+              name="mascota"
+              class="form-select"
+              [(ngModel)]="formulario.idMascota"
+              required
+            >
+              <option *ngFor="let mascota of catalogos.mascotas" [ngValue]="mascota.id">
+                {{ mascota.nombre }}
+              </option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="servicio">Servicio</label>
+            <select
+              id="servicio"
+              name="servicio"
+              class="form-select"
+              [(ngModel)]="formulario.idServicio"
+              required
+            >
+              <option *ngFor="let servicio of catalogos.servicios" [ngValue]="servicio.id">
+                {{ servicio.nombre }}
+              </option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="veterinario">Veterinario</label>
+            <select
+              id="veterinario"
+              name="veterinario"
+              class="form-select"
+              [(ngModel)]="formulario.idVeterinario"
+              required
+            >
+              <option *ngFor="let veterinario of catalogos.veterinarios" [ngValue]="veterinario.id">
+                {{ veterinario.nombre }}
+              </option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="fechaHora">Fecha y hora</label>
+            <input
+              id="fechaHora"
+              name="fechaHora"
+              type="datetime-local"
+              class="form-control"
+              [(ngModel)]="formulario.fechaHora"
+              required
+            />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="motivo">Motivo</label>
+            <input
+              id="motivo"
+              name="motivo"
+              class="form-control"
+              [(ngModel)]="formulario.motivo"
+              required
+            />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="estado">Estado</label>
+            <select
+              id="estado"
+              name="estado"
+              class="form-select"
+              [(ngModel)]="formulario.estado"
+              required
+            >
+              <option value="PENDIENTE">Pendiente</option>
+              <option value="CONFIRMADA">Confirmada</option>
+              <option value="ATENDIDA">Atendida</option>
+              <option value="CANCELADA">Cancelada</option>
+            </select>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label" for="observaciones">Observaciones</label>
+            <textarea
+              id="observaciones"
+              name="observaciones"
+              class="form-control"
+              [(ngModel)]="formulario.observaciones"
+              rows="2"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="estaGuardando || formularioCita.invalid"
+          >
+            {{ estaGuardando ? 'Guardando...' : 'Guardar cita' }}
+          </button>
+          <button
+            *ngIf="citaSeleccionada"
+            type="button"
+            class="btn btn-outline-secondary"
+            (click)="cancelarEdicion()"
+          >
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section class="dashboard-card">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 fw-bold mb-0">Citas registradas</h2>
+        <button class="btn btn-outline-primary btn-sm" (click)="cargarCitas()">
+          Actualizar lista
+        </button>
+      </div>
+
+      <div *ngIf="estaCargando" class="text-secondary">Cargando citas...</div>
+      <div *ngIf="!estaCargando && listaCitas.length === 0" class="text-secondary">
+        No hay citas registradas.
+      </div>
+
+      <div *ngIf="!estaCargando && listaCitas.length > 0" class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Mascota</th>
+              <th>Servicio</th>
+              <th>Veterinario</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let cita of listaCitas">
+              <td>{{ cita.fechaHora | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ cita.mascota }}</td>
+              <td>{{ cita.servicio }}</td>
+              <td>{{ cita.veterinario }}</td>
+              <td>{{ cita.estado }}</td>
+              <td class="text-nowrap">
+                <button class="btn btn-sm btn-outline-primary me-2" (click)="editarCita(cita)">
+                  Editar
+                </button>
+                <button class="btn btn-sm btn-outline-danger" (click)="eliminarCita(cita)">
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>

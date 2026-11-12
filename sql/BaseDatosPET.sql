@@ -436,6 +436,71 @@ VALUES
 ('Limpieza dental',
  'Servicio de higiene dental', 100.00, 60);
 
+INSERT IGNORE INTO propietario
+(nombre, apellido, documento, telefono, correo, direccion)
+VALUES
+('Ana', 'Torres', 'PET-1001', '3001112233', 'ana.torres@correo.test', 'Av. Principal 123'),
+('Luis', 'Rojas', 'PET-1002', '3004445566', 'luis.rojas@correo.test', 'Calle Central 456');
+
+INSERT INTO mascota
+(nombre, especie, raza, sexo, fecha_nacimiento, peso, estado, id_propietario)
+SELECT 'Luna', 'Perro', 'Labrador', 'HEMBRA', '2021-05-10', 24.50, 'ACTIVO', p.id_propietario
+FROM propietario p
+WHERE p.documento = 'PET-1001'
+AND NOT EXISTS (
+    SELECT 1 FROM mascota m
+    WHERE m.nombre = 'Luna' AND m.id_propietario = p.id_propietario
+);
+
+INSERT INTO mascota
+(nombre, especie, raza, sexo, fecha_nacimiento, peso, estado, id_propietario)
+SELECT 'Milo', 'Gato', 'Criollo', 'MACHO', '2022-08-15', 5.20, 'ACTIVO', p.id_propietario
+FROM propietario p
+WHERE p.documento = 'PET-1002'
+AND NOT EXISTS (
+    SELECT 1 FROM mascota m
+    WHERE m.nombre = 'Milo' AND m.id_propietario = p.id_propietario
+);
+
+INSERT IGNORE INTO producto
+(codigo, nombre, descripcion, categoria, precio, stock, activo)
+VALUES
+('PROD-001', 'Alimento premium', 'Bolsa de alimento para mascota', 'Alimentos', 28.50, 20, TRUE),
+('PROD-002', 'Collar ajustable', 'Collar de tamaño mediano', 'Accesorios', 18.00, 15, TRUE);
+
+INSERT INTO cita
+(id_mascota, id_servicio, id_veterinario, id_usuario_registro,
+ fecha_hora, motivo, estado, observaciones)
+SELECT m.id_mascota, s.id_servicio, v.id_usuario, r.id_usuario,
+       '2026-11-15 10:00:00', 'Control general de Luna', 'CONFIRMADA',
+       'Registro demostrativo'
+FROM mascota m
+JOIN propietario p ON p.id_propietario = m.id_propietario
+JOIN servicio s ON s.nombre = 'Consulta general'
+JOIN usuario v ON v.correo = 'admin@petapet.test'
+JOIN usuario r ON r.correo = 'user@petapet.test'
+WHERE m.nombre = 'Luna' AND p.documento = 'PET-1001'
+AND NOT EXISTS (
+    SELECT 1 FROM cita c WHERE c.motivo = 'Control general de Luna'
+);
+
+INSERT INTO venta
+(id_usuario, id_propietario, fecha_venta, total, estado)
+SELECT u.id_usuario, p.id_propietario, '2026-11-12 10:00:00', 57.00, 'REGISTRADA'
+FROM usuario u
+JOIN propietario p ON p.documento = 'PET-1001'
+WHERE u.correo = 'user@petapet.test'
+AND NOT EXISTS (
+    SELECT 1 FROM venta v WHERE v.fecha_venta = '2026-11-12 10:00:00'
+);
+
+INSERT IGNORE INTO detalle_venta
+(id_venta, id_producto, cantidad, precio_unitario)
+SELECT v.id_venta, p.id_producto, 2, 28.50
+FROM venta v
+JOIN producto p ON p.codigo = 'PROD-001'
+WHERE v.fecha_venta = '2026-11-12 10:00:00';
+
 
 -- =====================================================
 -- 16. VERIFICACIÓN
