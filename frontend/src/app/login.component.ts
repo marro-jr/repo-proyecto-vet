@@ -1,14 +1,14 @@
 import { Component, inject, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from './auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule],
   template: `
     <div class="login-wrapper">
       <div class="container-fluid p-0">
@@ -31,7 +31,7 @@ import { AuthService } from './auth.service';
                 <div>{{ errorMensaje }}</div>
               </div>
 
-              <form (submit)="$event.preventDefault(); iniciarSesion()" autocomplete="off">
+              <form [formGroup]="formularioLogin" (ngSubmit)="iniciarSesion()" autocomplete="off">
                 <div class="mb-3">
                   <label for="correo" class="form-label fw-semibold small text-secondary"
                     >Correo Institucional</label
@@ -42,13 +42,18 @@ import { AuthService } from './auth.service';
                       type="email"
                       class="form-control input-with-icon"
                       id="correo"
-                      name="correo"
-                      [(ngModel)]="correo"
+                      formControlName="correo"
                       placeholder="ejemplo@petapet.test"
                       autocomplete="off"
-                      (keydown.enter)="$event.preventDefault(); iniciarSesion()"
-                      required
                     />
+                  </div>
+                  <div *ngIf="campoInvalido('correo')" class="text-danger small mt-1">
+                    <span *ngIf="formularioLogin.get('correo')?.hasError('required')">
+                      El correo es obligatorio.
+                    </span>
+                    <span *ngIf="formularioLogin.get('correo')?.hasError('email')">
+                      Ingresa un correo válido.
+                    </span>
                   </div>
                 </div>
 
@@ -62,12 +67,9 @@ import { AuthService } from './auth.service';
                       [type]="mostrarPassword ? 'text' : 'password'"
                       class="form-control input-with-icon"
                       id="password"
-                      name="password"
-                      [(ngModel)]="password"
+                      formControlName="password"
                       placeholder="Ingresa tu contraseña"
                       autocomplete="new-password"
-                      (keydown.enter)="$event.preventDefault(); iniciarSesion()"
-                      required
                     />
                     <button
                       type="button"
@@ -81,11 +83,18 @@ import { AuthService } from './auth.service';
                       ></i>
                     </button>
                   </div>
+                  <div *ngIf="campoInvalido('password')" class="text-danger small mt-1">
+                    <span *ngIf="formularioLogin.get('password')?.hasError('required')">
+                      La contraseña es obligatoria.
+                    </span>
+                    <span *ngIf="formularioLogin.get('password')?.hasError('minlength')">
+                      La contraseña debe tener al menos 6 caracteres.
+                    </span>
+                  </div>
                 </div>
 
                 <button
-                  type="button"
-                  (click)="iniciarSesion()"
+                  type="submit"
                   class="btn btn-primary-custom w-100 d-flex align-items-center justify-content-center gap-2"
                   [disabled]="cargando"
                 >
@@ -130,8 +139,17 @@ export class LoginComponent implements OnInit {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
-  correo = '';
-  password = '';
+  formularioLogin = new FormGroup({
+    correo: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.email],
+    }),
+    password: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.minLength(6)],
+    }),
+  });
+  formularioEnviado = false;
   mostrarPassword = false;
 
   cargando = false;
@@ -149,8 +167,11 @@ export class LoginComponent implements OnInit {
   }
 
   iniciarSesion(): void {
-    if (!this.correo || !this.password) {
-      this.errorMensaje = 'Por favor completa todos los campos requeridos.';
+    this.formularioEnviado = true;
+
+    if (this.formularioLogin.invalid) {
+      this.formularioLogin.markAllAsTouched();
+      this.errorMensaje = 'Revisa los campos del formulario.';
       this.cdr.detectChanges();
       return;
     }
@@ -159,7 +180,9 @@ export class LoginComponent implements OnInit {
     this.errorMensaje = '';
     this.cdr.detectChanges();
 
-    this.authService.iniciarSesion(this.correo.trim(), this.password).subscribe({
+    const datos = this.formularioLogin.getRawValue();
+
+    this.authService.iniciarSesion(datos.correo.trim(), datos.password).subscribe({
       next: () => {
         this.cargando = false;
         this.cdr.detectChanges();
@@ -179,5 +202,10 @@ export class LoginComponent implements OnInit {
         this.cdr.detectChanges();
       },
     });
+  }
+
+  campoInvalido(nombreCampo: string): boolean {
+    const campo = this.formularioLogin.get(nombreCampo);
+    return !!campo && campo.invalid && (campo.touched || this.formularioEnviado);
   }
 }

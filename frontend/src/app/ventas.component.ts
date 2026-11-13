@@ -1,14 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CatalogosVenta, DatosVenta, Venta, VentaService } from './venta.service';
 
 @Component({
   selector: 'app-ventas',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './ventas.component.html',
 })
 export class VentasComponent implements OnInit {
@@ -18,7 +18,18 @@ export class VentasComponent implements OnInit {
   listaVentas: Venta[] = [];
   catalogos: CatalogosVenta = { propietarios: [] };
   ventaSeleccionada: Venta | null = null;
-  formulario: DatosVenta = this.crearFormularioVacio();
+  formularioVenta = new FormGroup({
+    idPropietario: new FormControl<number | null>(null),
+    total: new FormControl(0, {
+      nonNullable: true,
+      validators: [Validators.required, Validators.min(0)],
+    }),
+    estado: new FormControl<'REGISTRADA' | 'ANULADA'>('REGISTRADA', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+  });
+  formularioEnviado = false;
   estaCargando = false;
   estaGuardando = false;
   mensajeExito = '';
@@ -58,14 +69,29 @@ export class VentasComponent implements OnInit {
   }
 
   guardarVenta(): void {
+    this.formularioEnviado = true;
+
+    if (this.formularioVenta.invalid) {
+      this.formularioVenta.markAllAsTouched();
+      this.mensajeError = 'Revisa los campos del formulario.';
+      this.detectorCambios.detectChanges();
+      return;
+    }
+
     this.estaGuardando = true;
     this.mensajeExito = '';
     this.mensajeError = '';
     this.detectorCambios.detectChanges();
 
+    const formulario = this.formularioVenta.getRawValue();
+    const datosVenta: DatosVenta = {
+      idPropietario: formulario.idPropietario,
+      total: formulario.total,
+      estado: formulario.estado,
+    };
     const solicitud = this.ventaSeleccionada
-      ? this.ventaService.actualizarVenta(this.ventaSeleccionada.idVenta, this.formulario)
-      : this.ventaService.registrarVenta(this.formulario);
+      ? this.ventaService.actualizarVenta(this.ventaSeleccionada.idVenta, datosVenta)
+      : this.ventaService.registrarVenta(datosVenta);
 
     solicitud.subscribe({
       next: () => {
@@ -85,11 +111,12 @@ export class VentasComponent implements OnInit {
 
   editarVenta(venta: Venta): void {
     this.ventaSeleccionada = venta;
-    this.formulario = {
+    this.formularioVenta.setValue({
       idPropietario: venta.idPropietario,
       total: venta.total,
       estado: venta.estado,
-    };
+    });
+    this.formularioEnviado = false;
     this.mensajeExito = '';
     this.mensajeError = '';
     this.detectorCambios.detectChanges();
@@ -98,7 +125,12 @@ export class VentasComponent implements OnInit {
 
   cancelarEdicion(): void {
     this.ventaSeleccionada = null;
-    this.formulario = this.crearFormularioVacio();
+    this.formularioVenta.reset({
+      idPropietario: null,
+      total: 0,
+      estado: 'REGISTRADA',
+    });
+    this.formularioEnviado = false;
     this.detectorCambios.detectChanges();
   }
 
@@ -116,12 +148,9 @@ export class VentasComponent implements OnInit {
     });
   }
 
-  private crearFormularioVacio(): DatosVenta {
-    return {
-      idPropietario: null,
-      total: 0,
-      estado: 'REGISTRADA',
-    };
+  campoInvalido(nombreCampo: string): boolean {
+    const campo = this.formularioVenta.get(nombreCampo);
+    return !!campo && campo.invalid && (campo.touched || this.formularioEnviado);
   }
 
   private mostrarError(error: HttpErrorResponse, mensajePredeterminado: string): void {

@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Servicio } from './servicio';
 import { ServicioService } from './servicio.service';
@@ -9,7 +9,7 @@ import { ServicioService } from './servicio.service';
 @Component({
   selector: 'app-servicios',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './servicios.component.html',
 })
 export class ServiciosComponent implements OnInit {
@@ -18,7 +18,25 @@ export class ServiciosComponent implements OnInit {
 
   listaServicios: Servicio[] = [];
   servicioSeleccionado: Servicio | null = null;
-  formulario: Servicio = this.crearFormularioVacio();
+  formularioServicio = new FormGroup({
+    nombre: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.minLength(2)],
+    }),
+    descripcion: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+    precio: new FormControl(0, {
+      nonNullable: true,
+      validators: [Validators.required, Validators.min(0)],
+    }),
+    duracion: new FormControl(30, {
+      nonNullable: true,
+      validators: [Validators.required, Validators.min(1)],
+    }),
+  });
+  formularioEnviado = false;
   estaCargando = false;
   estaGuardando = false;
   mensajeExito = '';
@@ -51,15 +69,31 @@ export class ServiciosComponent implements OnInit {
   }
 
   guardarServicio(): void {
+    this.formularioEnviado = true;
+
+    if (this.formularioServicio.invalid) {
+      this.formularioServicio.markAllAsTouched();
+      this.mensajeError = 'Revisa los campos del formulario.';
+      this.detectorCambios.detectChanges();
+      return;
+    }
+
     this.estaGuardando = true;
     this.mensajeExito = '';
     this.mensajeError = '';
     this.detectorCambios.detectChanges();
 
+    const formulario = this.formularioServicio.getRawValue();
+    const datosServicio: Servicio = {
+      nombre: formulario.nombre.trim(),
+      descripcion: formulario.descripcion.trim(),
+      precio: formulario.precio,
+      duracion: formulario.duracion,
+    };
     const idServicio = this.servicioSeleccionado?.idServicio;
     const solicitud = idServicio
-      ? this.servicioService.actualizarServicio(idServicio, this.formulario)
-      : this.servicioService.registrarServicio(this.formulario);
+      ? this.servicioService.actualizarServicio(idServicio, datosServicio)
+      : this.servicioService.registrarServicio(datosServicio);
 
     solicitud.subscribe({
       next: () => {
@@ -79,7 +113,13 @@ export class ServiciosComponent implements OnInit {
 
   editarServicio(servicio: Servicio): void {
     this.servicioSeleccionado = servicio;
-    this.formulario = { ...servicio };
+    this.formularioServicio.setValue({
+      nombre: servicio.nombre,
+      descripcion: servicio.descripcion,
+      precio: servicio.precio,
+      duracion: servicio.duracion,
+    });
+    this.formularioEnviado = false;
     this.mensajeExito = '';
     this.mensajeError = '';
     this.detectorCambios.detectChanges();
@@ -88,7 +128,13 @@ export class ServiciosComponent implements OnInit {
 
   cancelarEdicion(): void {
     this.servicioSeleccionado = null;
-    this.formulario = this.crearFormularioVacio();
+    this.formularioServicio.reset({
+      nombre: '',
+      descripcion: '',
+      precio: 0,
+      duracion: 30,
+    });
+    this.formularioEnviado = false;
     this.detectorCambios.detectChanges();
   }
 
@@ -108,13 +154,9 @@ export class ServiciosComponent implements OnInit {
     });
   }
 
-  private crearFormularioVacio(): Servicio {
-    return {
-      nombre: '',
-      descripcion: '',
-      precio: 0,
-      duracion: 30,
-    };
+  campoInvalido(nombreCampo: string): boolean {
+    const campo = this.formularioServicio.get(nombreCampo);
+    return !!campo && campo.invalid && (campo.touched || this.formularioEnviado);
   }
 
   private mostrarError(error: HttpErrorResponse, mensajePredeterminado: string): void {

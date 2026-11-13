@@ -1,14 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CatalogosCita, Cita, CitaService, DatosCita } from './cita.service';
 
 @Component({
   selector: 'app-citas',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './citas.component.html',
 })
 export class CitasComponent implements OnInit {
@@ -22,7 +22,34 @@ export class CitasComponent implements OnInit {
     veterinarios: [],
   };
   citaSeleccionada: Cita | null = null;
-  formulario: DatosCita = this.crearFormularioVacio();
+  formularioCita = new FormGroup({
+    idMascota: new FormControl(0, {
+      nonNullable: true,
+      validators: [Validators.required, Validators.min(1)],
+    }),
+    idServicio: new FormControl(0, {
+      nonNullable: true,
+      validators: [Validators.required, Validators.min(1)],
+    }),
+    idVeterinario: new FormControl(0, {
+      nonNullable: true,
+      validators: [Validators.required, Validators.min(1)],
+    }),
+    fechaHora: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+    motivo: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.minLength(3)],
+    }),
+    estado: new FormControl<'PENDIENTE' | 'CONFIRMADA' | 'ATENDIDA' | 'CANCELADA'>('PENDIENTE', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+    observaciones: new FormControl('', { nonNullable: true }),
+  });
+  formularioEnviado = false;
   estaCargando = false;
   estaGuardando = false;
   mensajeExito = '';
@@ -37,9 +64,13 @@ export class CitasComponent implements OnInit {
     this.citaService.obtenerCatalogos().subscribe({
       next: (catalogos) => {
         this.catalogos = catalogos;
-        this.formulario.idMascota = catalogos.mascotas[0]?.id ?? 0;
-        this.formulario.idServicio = catalogos.servicios[0]?.id ?? 0;
-        this.formulario.idVeterinario = catalogos.veterinarios[0]?.id ?? 0;
+        if (!this.citaSeleccionada) {
+          this.formularioCita.patchValue({
+            idMascota: catalogos.mascotas[0]?.id ?? 0,
+            idServicio: catalogos.servicios[0]?.id ?? 0,
+            idVeterinario: catalogos.veterinarios[0]?.id ?? 0,
+          });
+        }
         this.detectorCambios.detectChanges();
       },
       error: (error) => this.mostrarError(error, 'No fue posible cargar los catálogos.'),
@@ -65,14 +96,33 @@ export class CitasComponent implements OnInit {
   }
 
   guardarCita(): void {
+    this.formularioEnviado = true;
+
+    if (this.formularioCita.invalid) {
+      this.formularioCita.markAllAsTouched();
+      this.mensajeError = 'Revisa los campos del formulario.';
+      this.detectorCambios.detectChanges();
+      return;
+    }
+
     this.estaGuardando = true;
     this.mensajeExito = '';
     this.mensajeError = '';
     this.detectorCambios.detectChanges();
 
+    const formulario = this.formularioCita.getRawValue();
+    const datosCita: DatosCita = {
+      idMascota: formulario.idMascota,
+      idServicio: formulario.idServicio,
+      idVeterinario: formulario.idVeterinario,
+      fechaHora: formulario.fechaHora,
+      motivo: formulario.motivo.trim(),
+      estado: formulario.estado,
+      observaciones: formulario.observaciones.trim(),
+    };
     const solicitud = this.citaSeleccionada
-      ? this.citaService.actualizarCita(this.citaSeleccionada.idCita, this.formulario)
-      : this.citaService.registrarCita(this.formulario);
+      ? this.citaService.actualizarCita(this.citaSeleccionada.idCita, datosCita)
+      : this.citaService.registrarCita(datosCita);
 
     solicitud.subscribe({
       next: () => {
@@ -92,7 +142,7 @@ export class CitasComponent implements OnInit {
 
   editarCita(cita: Cita): void {
     this.citaSeleccionada = cita;
-    this.formulario = {
+    this.formularioCita.setValue({
       idMascota: cita.idMascota,
       idServicio: cita.idServicio,
       idVeterinario: cita.idVeterinario,
@@ -100,7 +150,8 @@ export class CitasComponent implements OnInit {
       motivo: cita.motivo,
       estado: cita.estado,
       observaciones: cita.observaciones || '',
-    };
+    });
+    this.formularioEnviado = false;
     this.mensajeExito = '';
     this.mensajeError = '';
     this.detectorCambios.detectChanges();
@@ -109,10 +160,16 @@ export class CitasComponent implements OnInit {
 
   cancelarEdicion(): void {
     this.citaSeleccionada = null;
-    this.formulario = this.crearFormularioVacio();
-    this.formulario.idMascota = this.catalogos.mascotas[0]?.id ?? 0;
-    this.formulario.idServicio = this.catalogos.servicios[0]?.id ?? 0;
-    this.formulario.idVeterinario = this.catalogos.veterinarios[0]?.id ?? 0;
+    this.formularioCita.reset({
+      idMascota: this.catalogos.mascotas[0]?.id ?? 0,
+      idServicio: this.catalogos.servicios[0]?.id ?? 0,
+      idVeterinario: this.catalogos.veterinarios[0]?.id ?? 0,
+      fechaHora: '',
+      motivo: '',
+      estado: 'PENDIENTE',
+      observaciones: '',
+    });
+    this.formularioEnviado = false;
     this.detectorCambios.detectChanges();
   }
 
@@ -130,16 +187,9 @@ export class CitasComponent implements OnInit {
     });
   }
 
-  private crearFormularioVacio(): DatosCita {
-    return {
-      idMascota: 0,
-      idServicio: 0,
-      idVeterinario: 0,
-      fechaHora: '',
-      motivo: '',
-      estado: 'PENDIENTE',
-      observaciones: '',
-    };
+  campoInvalido(nombreCampo: string): boolean {
+    const campo = this.formularioCita.get(nombreCampo);
+    return !!campo && campo.invalid && (campo.touched || this.formularioEnviado);
   }
 
   private mostrarError(error: HttpErrorResponse, mensajePredeterminado: string): void {

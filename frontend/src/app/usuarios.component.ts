@@ -1,14 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DatosUsuario, Rol, Usuario, UsuarioService } from './usuario.service';
 
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
     <div class="min-vh-100 bg-light d-flex flex-column">
       <nav class="navbar bg-navbar-black px-4 py-3 shadow-sm">
@@ -40,43 +40,45 @@ import { DatosUsuario, Rol, Usuario, UsuarioService } from './usuario.service';
             {{ usuarioSeleccionado ? 'Editar usuario' : 'Registrar usuario' }}
           </h2>
 
-          <form (ngSubmit)="guardarUsuario()" #formularioUsuario="ngForm">
+          <form [formGroup]="formularioUsuario" (ngSubmit)="guardarUsuario()">
             <div class="row g-3">
               <div class="col-md-6">
                 <label class="form-label" for="nombre">Nombre</label>
-                <input
-                  id="nombre"
-                  name="nombre"
-                  class="form-control"
-                  [(ngModel)]="formulario.nombre"
-                  minlength="2"
-                  required
-                />
+                <input id="nombre" class="form-control" formControlName="nombre" />
+                <div *ngIf="campoInvalido('nombre')" class="text-danger small mt-1">
+                  <span *ngIf="formularioUsuario.get('nombre')?.hasError('required')">
+                    El nombre es obligatorio.
+                  </span>
+                  <span *ngIf="formularioUsuario.get('nombre')?.hasError('minlength')">
+                    El nombre debe tener al menos 2 caracteres.
+                  </span>
+                </div>
               </div>
 
               <div class="col-md-6">
                 <label class="form-label" for="apellido">Apellido</label>
-                <input
-                  id="apellido"
-                  name="apellido"
-                  class="form-control"
-                  [(ngModel)]="formulario.apellido"
-                  minlength="2"
-                  required
-                />
+                <input id="apellido" class="form-control" formControlName="apellido" />
+                <div *ngIf="campoInvalido('apellido')" class="text-danger small mt-1">
+                  <span *ngIf="formularioUsuario.get('apellido')?.hasError('required')">
+                    El apellido es obligatorio.
+                  </span>
+                  <span *ngIf="formularioUsuario.get('apellido')?.hasError('minlength')">
+                    El apellido debe tener al menos 2 caracteres.
+                  </span>
+                </div>
               </div>
 
               <div class="col-md-6">
                 <label class="form-label" for="correo">Correo</label>
-                <input
-                  id="correo"
-                  name="correo"
-                  type="email"
-                  class="form-control"
-                  [(ngModel)]="formulario.correo"
-                  email
-                  required
-                />
+                <input id="correo" type="email" class="form-control" formControlName="correo" />
+                <div *ngIf="campoInvalido('correo')" class="text-danger small mt-1">
+                  <span *ngIf="formularioUsuario.get('correo')?.hasError('required')">
+                    El correo es obligatorio.
+                  </span>
+                  <span *ngIf="formularioUsuario.get('correo')?.hasError('email')">
+                    Ingresa un correo válido.
+                  </span>
+                </div>
               </div>
 
               <div class="col-md-6">
@@ -85,40 +87,36 @@ import { DatosUsuario, Rol, Usuario, UsuarioService } from './usuario.service';
                 </label>
                 <input
                   id="password"
-                  name="password"
                   type="password"
                   class="form-control"
-                  [(ngModel)]="formulario.password"
-                  minlength="6"
-                  [required]="!usuarioSeleccionado"
+                  formControlName="password"
                 />
+                <div *ngIf="campoInvalido('password')" class="text-danger small mt-1">
+                  <span *ngIf="formularioUsuario.get('password')?.hasError('required')">
+                    La contraseña es obligatoria.
+                  </span>
+                  <span *ngIf="formularioUsuario.get('password')?.hasError('minlength')">
+                    La contraseña debe tener al menos 6 caracteres.
+                  </span>
+                </div>
               </div>
 
               <div class="col-md-6">
                 <label class="form-label" for="rol">Rol</label>
-                <select
-                  id="rol"
-                  name="rol"
-                  class="form-select"
-                  [(ngModel)]="formulario.idRol"
-                  required
-                >
+                <select id="rol" class="form-select" formControlName="idRol">
                   <option [ngValue]="0" disabled>Selecciona un rol</option>
                   <option *ngFor="let rol of listaRoles" [ngValue]="rol.idRol">
                     {{ rol.nombre }} - {{ rol.descripcion }}
                   </option>
                 </select>
+                <div *ngIf="campoInvalido('idRol')" class="text-danger small mt-1">
+                  Selecciona un rol.
+                </div>
               </div>
 
               <div class="col-md-6">
                 <label class="form-label" for="estado">Estado</label>
-                <select
-                  id="estado"
-                  name="estado"
-                  class="form-select"
-                  [(ngModel)]="formulario.estado"
-                  required
-                >
+                <select id="estado" class="form-select" formControlName="estado">
                   <option value="ACTIVO">Activo</option>
                   <option value="INACTIVO">Inactivo</option>
                 </select>
@@ -126,11 +124,7 @@ import { DatosUsuario, Rol, Usuario, UsuarioService } from './usuario.service';
             </div>
 
             <div class="d-flex gap-2 mt-4">
-              <button
-                class="btn btn-primary"
-                type="submit"
-                [disabled]="estaGuardando || formularioUsuario.invalid"
-              >
+              <button class="btn btn-primary" type="submit" [disabled]="estaGuardando">
                 {{
                   estaGuardando
                     ? 'Guardando...'
@@ -221,7 +215,33 @@ export class UsuariosComponent implements OnInit {
   listaUsuarios: Usuario[] = [];
   listaRoles: Rol[] = [];
   usuarioSeleccionado: Usuario | null = null;
-  formulario: DatosUsuario = this.crearFormularioVacio();
+  formularioUsuario = new FormGroup({
+    nombre: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.minLength(2)],
+    }),
+    apellido: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.minLength(2)],
+    }),
+    correo: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.email],
+    }),
+    password: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.minLength(6)],
+    }),
+    estado: new FormControl<'ACTIVO' | 'INACTIVO'>('ACTIVO', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+    idRol: new FormControl(0, {
+      nonNullable: true,
+      validators: [Validators.required, Validators.min(1)],
+    }),
+  });
+  formularioEnviado = false;
   estaCargando = false;
   estaGuardando = false;
   mensajeExito = '';
@@ -236,7 +256,9 @@ export class UsuariosComponent implements OnInit {
     this.usuarioService.listarRoles().subscribe({
       next: (roles) => {
         this.listaRoles = roles;
-        this.formulario.idRol = this.obtenerRolPredeterminado();
+        if (!this.usuarioSeleccionado) {
+          this.formularioUsuario.patchValue({ idRol: this.obtenerRolPredeterminado() });
+        }
         this.detectorCambios.detectChanges();
       },
       error: (error) => this.mostrarError(error, 'No fue posible cargar los roles.'),
@@ -262,14 +284,32 @@ export class UsuariosComponent implements OnInit {
   }
 
   guardarUsuario(): void {
+    this.formularioEnviado = true;
+
+    if (this.formularioUsuario.invalid) {
+      this.formularioUsuario.markAllAsTouched();
+      this.mensajeError = 'Revisa los campos del formulario.';
+      this.detectorCambios.detectChanges();
+      return;
+    }
+
     this.estaGuardando = true;
     this.mensajeExito = '';
     this.mensajeError = '';
     this.detectorCambios.detectChanges();
 
+    const formulario = this.formularioUsuario.getRawValue();
+    const datosUsuario: DatosUsuario = {
+      nombre: formulario.nombre.trim(),
+      apellido: formulario.apellido.trim(),
+      correo: formulario.correo.trim(),
+      password: formulario.password,
+      estado: formulario.estado,
+      idRol: formulario.idRol,
+    };
     const solicitud = this.usuarioSeleccionado
-      ? this.usuarioService.actualizarUsuario(this.usuarioSeleccionado.idUsuario, this.formulario)
-      : this.usuarioService.registrarUsuario(this.formulario);
+      ? this.usuarioService.actualizarUsuario(this.usuarioSeleccionado.idUsuario, datosUsuario)
+      : this.usuarioService.registrarUsuario(datosUsuario);
 
     solicitud.subscribe({
       next: () => {
@@ -289,14 +329,16 @@ export class UsuariosComponent implements OnInit {
 
   editarUsuario(usuario: Usuario): void {
     this.usuarioSeleccionado = usuario;
-    this.formulario = {
+    this.formularioUsuario.setValue({
       nombre: usuario.nombre,
       apellido: usuario.apellido,
       correo: usuario.correo,
       password: '',
       estado: usuario.estado,
       idRol: usuario.idRol,
-    };
+    });
+    this.actualizarValidadoresPassword();
+    this.formularioEnviado = false;
     this.mensajeExito = '';
     this.mensajeError = '';
     this.detectorCambios.detectChanges();
@@ -305,7 +347,16 @@ export class UsuariosComponent implements OnInit {
 
   cancelarEdicion(): void {
     this.usuarioSeleccionado = null;
-    this.formulario = this.crearFormularioVacio();
+    this.formularioUsuario.reset({
+      nombre: '',
+      apellido: '',
+      correo: '',
+      password: '',
+      estado: 'ACTIVO',
+      idRol: this.obtenerRolPredeterminado(),
+    });
+    this.actualizarValidadoresPassword();
+    this.formularioEnviado = false;
     this.detectorCambios.detectChanges();
   }
 
@@ -326,15 +377,18 @@ export class UsuariosComponent implements OnInit {
     });
   }
 
-  private crearFormularioVacio(): DatosUsuario {
-    return {
-      nombre: '',
-      apellido: '',
-      correo: '',
-      password: '',
-      estado: 'ACTIVO',
-      idRol: this.obtenerRolPredeterminado(),
-    };
+  campoInvalido(nombreCampo: string): boolean {
+    const campo = this.formularioUsuario.get(nombreCampo);
+    return !!campo && campo.invalid && (campo.touched || this.formularioEnviado);
+  }
+
+  private actualizarValidadoresPassword(): void {
+    const campoPassword = this.formularioUsuario.controls.password;
+    const validadores = this.usuarioSeleccionado
+      ? [Validators.minLength(6)]
+      : [Validators.required, Validators.minLength(6)];
+    campoPassword.setValidators(validadores);
+    campoPassword.updateValueAndValidity();
   }
 
   private obtenerRolPredeterminado(): number {

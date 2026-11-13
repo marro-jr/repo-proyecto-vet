@@ -18,16 +18,11 @@
         {{ ventaSeleccionada ? 'Editar venta' : 'Registrar venta' }}
       </h2>
 
-      <form (ngSubmit)="guardarVenta()" #formularioVenta="ngForm">
+      <form [formGroup]="formularioVenta" (ngSubmit)="guardarVenta()">
         <div class="row g-3">
           <div class="col-md-4">
             <label class="form-label" for="propietario">Propietario</label>
-            <select
-              id="propietario"
-              name="propietario"
-              class="form-select"
-              [(ngModel)]="formulario.idPropietario"
-            >
+            <select id="propietario" class="form-select" formControlName="idPropietario">
               <option [ngValue]="null">Público general</option>
               <option *ngFor="let propietario of catalogos.propietarios" [ngValue]="propietario.id">
                 {{ propietario.nombre }}
@@ -39,25 +34,25 @@
             <label class="form-label" for="total">Total</label>
             <input
               id="total"
-              name="total"
               type="number"
               class="form-control"
-              [(ngModel)]="formulario.total"
+              formControlName="total"
               min="0"
               step="0.01"
-              required
             />
+            <div *ngIf="campoInvalido('total')" class="text-danger small mt-1">
+              <span *ngIf="formularioVenta.get('total')?.hasError('required')">
+                El total es obligatorio.
+              </span>
+              <span *ngIf="formularioVenta.get('total')?.hasError('min')">
+                El total debe ser mayor o igual a 0.
+              </span>
+            </div>
           </div>
 
           <div class="col-md-4">
             <label class="form-label" for="estado">Estado</label>
-            <select
-              id="estado"
-              name="estado"
-              class="form-select"
-              [(ngModel)]="formulario.estado"
-              required
-            >
+            <select id="estado" class="form-select" formControlName="estado">
               <option value="REGISTRADA">Registrada</option>
               <option value="ANULADA">Anulada</option>
             </select>
@@ -65,11 +60,7 @@
         </div>
 
         <div class="d-flex gap-2 mt-4">
-          <button
-            type="submit"
-            class="btn btn-primary"
-            [disabled]="estaGuardando || formularioVenta.invalid"
-          >
+          <button type="submit" class="btn btn-primary" [disabled]="estaGuardando">
             {{ estaGuardando ? 'Guardando...' : 'Guardar venta' }}
           </button>
           <button

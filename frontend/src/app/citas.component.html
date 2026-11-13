@@ -18,85 +18,73 @@
         {{ citaSeleccionada ? 'Editar cita' : 'Registrar cita' }}
       </h2>
 
-      <form (ngSubmit)="guardarCita()" #formularioCita="ngForm">
+      <form [formGroup]="formularioCita" (ngSubmit)="guardarCita()">
         <div class="row g-3">
           <div class="col-md-6">
             <label class="form-label" for="mascota">Mascota</label>
-            <select
-              id="mascota"
-              name="mascota"
-              class="form-select"
-              [(ngModel)]="formulario.idMascota"
-              required
-            >
+            <select id="mascota" class="form-select" formControlName="idMascota">
               <option *ngFor="let mascota of catalogos.mascotas" [ngValue]="mascota.id">
                 {{ mascota.nombre }}
               </option>
             </select>
+            <div *ngIf="campoInvalido('idMascota')" class="text-danger small mt-1">
+              Selecciona una mascota.
+            </div>
           </div>
 
           <div class="col-md-6">
             <label class="form-label" for="servicio">Servicio</label>
-            <select
-              id="servicio"
-              name="servicio"
-              class="form-select"
-              [(ngModel)]="formulario.idServicio"
-              required
-            >
+            <select id="servicio" class="form-select" formControlName="idServicio">
               <option *ngFor="let servicio of catalogos.servicios" [ngValue]="servicio.id">
                 {{ servicio.nombre }}
               </option>
             </select>
+            <div *ngIf="campoInvalido('idServicio')" class="text-danger small mt-1">
+              Selecciona un servicio.
+            </div>
           </div>
 
           <div class="col-md-6">
             <label class="form-label" for="veterinario">Veterinario</label>
-            <select
-              id="veterinario"
-              name="veterinario"
-              class="form-select"
-              [(ngModel)]="formulario.idVeterinario"
-              required
-            >
+            <select id="veterinario" class="form-select" formControlName="idVeterinario">
               <option *ngFor="let veterinario of catalogos.veterinarios" [ngValue]="veterinario.id">
                 {{ veterinario.nombre }}
               </option>
             </select>
+            <div *ngIf="campoInvalido('idVeterinario')" class="text-danger small mt-1">
+              Selecciona un veterinario.
+            </div>
           </div>
 
           <div class="col-md-6">
             <label class="form-label" for="fechaHora">Fecha y hora</label>
             <input
               id="fechaHora"
-              name="fechaHora"
               type="datetime-local"
               class="form-control"
-              [(ngModel)]="formulario.fechaHora"
-              required
+              formControlName="fechaHora"
             />
+            <div *ngIf="campoInvalido('fechaHora')" class="text-danger small mt-1">
+              La fecha y hora son obligatorias.
+            </div>
           </div>
 
           <div class="col-md-6">
             <label class="form-label" for="motivo">Motivo</label>
-            <input
-              id="motivo"
-              name="motivo"
-              class="form-control"
-              [(ngModel)]="formulario.motivo"
-              required
-            />
+            <input id="motivo" class="form-control" formControlName="motivo" />
+            <div *ngIf="campoInvalido('motivo')" class="text-danger small mt-1">
+              <span *ngIf="formularioCita.get('motivo')?.hasError('required')">
+                El motivo es obligatorio.
+              </span>
+              <span *ngIf="formularioCita.get('motivo')?.hasError('minlength')">
+                El motivo debe tener al menos 3 caracteres.
+              </span>
+            </div>
           </div>
 
           <div class="col-md-6">
             <label class="form-label" for="estado">Estado</label>
-            <select
-              id="estado"
-              name="estado"
-              class="form-select"
-              [(ngModel)]="formulario.estado"
-              required
-            >
+            <select id="estado" class="form-select" formControlName="estado">
               <option value="PENDIENTE">Pendiente</option>
               <option value="CONFIRMADA">Confirmada</option>
               <option value="ATENDIDA">Atendida</option>
@@ -108,20 +96,15 @@
             <label class="form-label" for="observaciones">Observaciones</label>
             <textarea
               id="observaciones"
-              name="observaciones"
               class="form-control"
-              [(ngModel)]="formulario.observaciones"
+              formControlName="observaciones"
               rows="2"
             ></textarea>
           </div>
         </div>
 
         <div class="d-flex gap-2 mt-4">
-          <button
-            type="submit"
-            class="btn btn-primary"
-            [disabled]="estaGuardando || formularioCita.invalid"
-          >
+          <button type="submit" class="btn btn-primary" [disabled]="estaGuardando">
             {{ estaGuardando ? 'Guardando...' : 'Guardar cita' }}
           </button>
           <button
