@@ -1,13 +1,13 @@
 import { Routes } from '@angular/router';
-import { LoginComponent } from './login.component';
-import { PanelComponent } from './panel.component';
-import { ServiciosComponent } from './servicios.component';
-import { UsuariosComponent } from './usuarios.component';
-import { CitasComponent } from './citas.component';
-import { VentasComponent } from './ventas.component';
-import { ReportesComponent } from './reportes.component';
-import { authGuard } from './auth.guard';
-import { roleGuard } from './role.guard';
+import { LoginComponent } from './autenticacion/login.component';
+import { authGuard } from './autenticacion/auth.guard';
+import { roleGuard } from './autenticacion/role.guard';
+import { CitasComponent } from './citas/citas.component';
+import { PanelComponent } from './panel/panel.component';
+import { ReportesComponent } from './reportes/reportes.component';
+import { ServiciosComponent } from './servicios/servicios.component';
+import { UsuariosComponent } from './usuarios/usuarios.component';
+import { VentasComponent } from './ventas/ventas.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },

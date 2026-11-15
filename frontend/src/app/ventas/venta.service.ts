@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Catalogo } from './cita.service';
+import { Catalogo } from '../citas/cita.service';
 
 export interface Venta {
   idVenta: number;

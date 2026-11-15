@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 
 import { routes } from './app.routes';
-import { jwtInterceptor } from './jwt.interceptor';
+import { jwtInterceptor } from './autenticacion/jwt.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
